@@ -1,0 +1,344 @@
+﻿<Window x:Class="Sheas_Cealer.Wins.MainWin"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:consts="clr-namespace:Sheas_Cealer.Consts"
+        xmlns:convs="clr-namespace:Sheas_Cealer.Convs"
+        xmlns:preses="clr-namespace:Sheas_Cealer.Preses"
+        mc:Ignorable="d"
+        AllowDrop="True"
+        Title="Sheas Cealer"
+        WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize" SizeToContent="Height" Width="400"
+        d:DataContext="{d:DesignInstance preses:MainPres}"
+        Style="{DynamicResource CommonWindow}"
+        SourceInitialized="MainWin_SourceInitialized" Loaded="MainWin_Loaded" Closing="MainWin_Closing" DragEnter="MainWin_DragEnter" Drop="MainWin_Drop" KeyDown="MainWin_KeyDown">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- The single primary control: a round power button whose colour follows the global mode state. -->
+        <Style x:Key="PowerButton" TargetType="{x:Type Button}">
+            <Setter Property="Width" Value="160" />
+            <Setter Property="Height" Value="160" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Background">
+                <Setter.Value>
+                    <MultiBinding Converter="{x:Static convs:MainConv.MainPowerStateBrushConv}">
+                        <Binding Path="IsNginxRunning" />
+                        <Binding Path="IsNginxIniting" />
+                    </MultiBinding>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid>
+                            <Ellipse x:Name="Halo" Fill="{TemplateBinding Background}" Opacity="0.16" />
+                            <Ellipse x:Name="Core" Width="128" Height="128" Fill="{TemplateBinding Background}" />
+                            <md:PackIcon Kind="Power" Width="64" Height="64" Foreground="White"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Halo" Property="Opacity" Value="0.3" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Core" Property="Width" Value="122" />
+                                <Setter TargetName="Core" Property="Height" Value="122" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MoreButton" TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="MinWidth" Value="104" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="md:ButtonAssist.CornerRadius" Value="8" />
+        </Style>
+
+        <Style x:Key="CardButton" TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="16,10,16,14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Sheas Cealer" Style="{StaticResource MaterialDesignHeadline6TextBlock}" />
+            <TextBlock Text="{x:Static consts:MainConst.SubtitleText}" FontSize="12" Opacity="0.6" />
+        </StackPanel>
+
+        <!-- Power button -->
+        <Grid Grid.Row="1" Margin="0,22,0,10" HorizontalAlignment="Center">
+            <ProgressBar Width="176" Height="176" IsIndeterminate="True" Value="0"
+                         Style="{StaticResource MaterialDesignCircularProgressBar}"
+                         Visibility="{Binding IsNginxIniting, Converter={StaticResource BoolToVis}}" />
+            <Button x:Name="PowerButton" Style="{StaticResource PowerButton}"
+                    ToolTip="{x:Static consts:MainConst.PowerButtonToolTip}"
+                    Click="PowerButton_Click">
+                <Button.IsEnabled>
+                    <MultiBinding Converter="{x:Static convs:MainConv.MainPowerButtonIsEnabledConv}">
+                        <Binding Path="IsNginxExist" />
+                        <Binding Path="IsNginxIniting" />
+                        <Binding Source="{x:Static consts:MainConst.IsAdmin}" />
+                    </MultiBinding>
+                </Button.IsEnabled>
+            </Button>
+        </Grid>
+
+        <!-- Status -->
+        <StackPanel Grid.Row="2" HorizontalAlignment="Center">
+            <TextBlock Style="{StaticResource MaterialDesignHeadline5TextBlock}" TextAlignment="Center">
+                <TextBlock.Text>
+                    <MultiBinding Converter="{x:Static convs:MainConv.MainStatusHeadlineConv}">
+                        <Binding Path="IsNginxRunning" />
+                        <Binding Path="IsNginxIniting" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <TextBlock Margin="0,6,0,0" MaxWidth="340" FontSize="12" Opacity="0.7" TextAlignment="Center" TextWrapping="Wrap">
+                <TextBlock.Text>
+                    <MultiBinding Converter="{x:Static convs:MainConv.MainStatusCaptionConv}">
+                        <Binding Path="IsNginxRunning" />
+                        <Binding Path="IsNginxIniting" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <TextBlock Margin="0,4,0,0" MaxWidth="340" FontSize="11" Opacity="0.6" TextAlignment="Center" TextWrapping="Wrap"
+                       Text="{Binding RelayStatus}" />
+        </StackPanel>
+
+        <!-- Connectivity card -->
+        <md:Card Grid.Row="3" Margin="0,18,0,0" Padding="14,10,14,12" UniformCornerRadius="12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{x:Static consts:MainConst.SiteChecksHeader}" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Style="{StaticResource CardButton}" Content="{x:Static consts:MainConst.RecheckButtonContent}" Click="RecheckButton_Click" />
+                        <Button Style="{StaticResource CardButton}" Content="{x:Static consts:MainConst.LineProbeButtonContent}" Click="LineProbeButton_Click" />
+                        <Button Style="{StaticResource CardButton}" Content="{x:Static consts:MainConst.CopyDiagnosticsButtonContent}" Click="CopyDiagnosticsButton_Click" />
+                    </StackPanel>
+                </Grid>
+                <ItemsControl Grid.Row="1" Margin="0,6,0,0" ItemsSource="{Binding SiteChecks}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <md:PackIcon Width="22" Height="22" Margin="0,1,10,0" VerticalAlignment="Top"
+                                             Kind="{Binding State, Converter={x:Static convs:MainConv.MainSiteCheckIconConv}}"
+                                             Foreground="{Binding State, Converter={x:Static convs:MainConv.MainSiteCheckBrushConv}}" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Detail}" FontSize="11.5" Opacity="0.7" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Grid.Row="2" Margin="0,6,0,0" FontSize="11.5" Opacity="0.75" TextWrapping="Wrap"
+                           Text="{Binding LineVerdict}" />
+            </Grid>
+        </md:Card>
+
+        <!-- Shown only without administrator rights -->
+        <Border Grid.Row="4" Margin="0,14,0,0" Padding="12,10" CornerRadius="10" Background="#26FFA000"
+                Visibility="{Binding Source={x:Static consts:MainConst.IsAdmin}, Converter={x:Static convs:MainConv.MainNonAdminVisibilityConv}}">
+            <StackPanel>
+                <TextBlock Text="{x:Static consts:MainConst.NonAdminHint}" FontSize="12" TextWrapping="Wrap" />
+                <Button Margin="0,8,0,0" HorizontalAlignment="Left" Style="{StaticResource MoreButton}"
+                        Content="{x:Static consts:MainConst.RelaunchAsAdminButtonContent}" Click="RelaunchAsAdminButton_Click" />
+            </StackPanel>
+        </Border>
+
+        <!-- Legacy modes and editors, collapsed by default. Element names are used by code-behind. -->
+        <Expander Grid.Row="5" Margin="0,14,0,0" IsExpanded="False" Header="{x:Static consts:MainConst.MoreFeaturesHeader}">
+            <StackPanel Margin="0,6,0,0">
+                <TextBlock Text="{x:Static consts:MainConst.MoreFeaturesHint}" Margin="3,0,3,8" FontSize="11.5" Opacity="0.6" TextWrapping="Wrap" />
+
+                <Grid Margin="3,0,3,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Style="{StaticResource MoreButton}" MinWidth="0" Margin="0,0,6,0" d:Content="# # # #"
+                            Content="{Binding SettingsMode, Converter={x:Static convs:MainConv.MainSettingsModeButtonContentConv}}"
+                            ToolTip="{x:Static consts:MainConst.SettingsModeButtonToolTip}"
+                            Click="SettingsModeButton_Click" />
+                    <TextBox x:Name="SettingsBox"
+                             Grid.Column="1" FontSize="12" VerticalContentAlignment="Center" md:HintAssist.IsFloating="True"
+                             AutomationProperties.Name="{Binding SettingsMode, Converter={x:Static convs:MainConv.MainSettingsBoxHintConv}}"
+                             md:HintAssist.Hint="{Binding SettingsMode, Converter={x:Static convs:MainConv.MainSettingsBoxHintConv}}"
+                             ToolTip="{Binding SettingsMode, Converter={x:Static convs:MainConv.MainSettingsBoxToolTipConv}}"
+                             TextChanged="SettingsBox_TextChanged" PreviewDragOver="MainWin_DragEnter">
+                        <TextBox.Text>
+                            <MultiBinding Mode="OneWay" UpdateSourceTrigger="PropertyChanged"
+                                          Converter="{x:Static convs:MainConv.MainSettingsBoxTextConv}">
+                                <Binding Path="SettingsMode" />
+                                <Binding Path="BrowserPath" />
+                                <Binding Path="UpstreamUrl" />
+                                <Binding Path="ExtraArgs" />
+                            </MultiBinding>
+                        </TextBox.Text>
+                    </TextBox>
+                    <Button Grid.Column="2" Style="{StaticResource MoreButton}" MinWidth="0" Margin="6,0,0,0" d:Content="# # # #"
+                            Content="{Binding SettingsMode, Converter={x:Static convs:MainConv.MainSettingsFunctionButtonContentConv}}"
+                            ToolTip="{x:Static consts:MainConst.SettingsFunctionButtonToolTip}"
+                            Click="SettingsFunctionButton_Click" />
+                </Grid>
+
+                <WrapPanel>
+                    <Button Style="{StaticResource MoreButton}"
+                            Content="{x:Static consts:MainConst.BrowserButtonContent}"
+                            ToolTip="{x:Static consts:MainConst.BrowserButtonToolTip}"
+                            Click="LaunchButton_Click" PreviewMouseDown="LaunchButton_PreviewMouseDown">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{x:Static convs:MainConv.MainBrowserButtonIsEnabledConv}">
+                                <Binding Path="BrowserPath" />
+                                <Binding Path="ExtraArgs" />
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button x:Name="NginxButton" Style="{StaticResource MoreButton}" d:Content="# # # #"
+                            Visibility="{Binding Source={x:Static consts:MainConst.IsAdmin}, Converter={x:Static convs:MainConv.MainAdminControlVisibilityConv}}"
+                            ToolTip="{Binding IsNginxRunning, Converter={x:Static convs:MainConv.MainNginxButtonToolTipConv}}"
+                            Click="LaunchButton_Click" PreviewMouseDown="LaunchButton_PreviewMouseDown">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{x:Static convs:MainConv.MainProxyButtonIsEnabledConv}">
+                                <Binding Path="IsNginxExist" />
+                                <Binding Path="IsNginxIniting" />
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                        <Button.Content>
+                            <MultiBinding Converter="{x:Static convs:MainConv.MainNginxButtonContentConv}">
+                                <Binding Path="IsNginxRunning" />
+                                <Binding Path="IsNginxIniting" />
+                            </MultiBinding>
+                        </Button.Content>
+                    </Button>
+                    <Button x:Name="MihomoButton" Style="{StaticResource MoreButton}" d:Content="# # # #"
+                            Visibility="{Binding Source={x:Static consts:MainConst.IsAdmin}, Converter={x:Static convs:MainConv.MainAdminControlVisibilityConv}}"
+                            ToolTip="{Binding IsMihomoRunning, Converter={x:Static convs:MainConv.MainMihomoButtonToolTipConv}}"
+                            Click="LaunchButton_Click" PreviewMouseDown="LaunchButton_PreviewMouseDown">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{x:Static convs:MainConv.MainProxyButtonIsEnabledConv}">
+                                <Binding Path="IsMihomoExist" />
+                                <Binding Path="IsMihomoIniting" />
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                        <Button.Content>
+                            <MultiBinding Converter="{x:Static convs:MainConv.MainMihomoButtonContentConv}">
+                                <Binding Path="IsMihomoRunning" />
+                                <Binding Path="IsMihomoIniting" />
+                            </MultiBinding>
+                        </Button.Content>
+                    </Button>
+
+                    <Button x:Name="EditLocalHostButton" Style="{StaticResource MoreButton}"
+                            Content="{x:Static consts:MainConst.EditLocalHostButtonContent}"
+                            ToolTip="{x:Static consts:MainConst.EditLocalHostButtonToolTip}"
+                            Click="EditHostButton_Click" />
+                    <Button Style="{StaticResource MoreButton}"
+                            Content="{x:Static consts:MainConst.EditUpstreamHostButtonContent}"
+                            ToolTip="{x:Static consts:MainConst.EditUpstreamHostButtonToolTip}"
+                            Click="EditHostButton_Click" />
+                    <Button Style="{StaticResource MoreButton}" d:Content="# # # # # #"
+                            IsEnabled="{Binding UpstreamUrl, Converter={x:Static convs:MainConv.MainUpdateHostButtonIsEnabledConv}}"
+                            Content="{Binding IsUpstreamHostUtd, Converter={x:Static convs:MainConv.MainUpdateHostButtonContentConv}}"
+                            ToolTip="{x:Static consts:MainConst.UpdateUpstreamHostButtonToolTip}"
+                            Click="UpdateUpstreamHostButton_Click" />
+                    <Button x:Name="EditNginxConfButton" Style="{StaticResource MoreButton}"
+                            Visibility="{Binding Source={x:Static consts:MainConst.IsAdmin}, Converter={x:Static convs:MainConv.MainAdminControlVisibilityConv}}"
+                            Content="{x:Static consts:MainConst.EditNginxConfButtonContent}"
+                            ToolTip="{x:Static consts:MainConst.EditNginxConfButtonToolTip}"
+                            Click="EditConfButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{x:Static convs:MainConv.MainProxyButtonIsEnabledConv}">
+                                <Binding Path="IsNginxExist" />
+                                <Binding Path="IsNginxIniting" />
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Style="{StaticResource MoreButton}"
+                            Visibility="{Binding Source={x:Static consts:MainConst.IsAdmin}, Converter={x:Static convs:MainConv.MainAdminControlVisibilityConv}}"
+                            Content="{x:Static consts:MainConst.EditMihomoConfButtonContent}"
+                            ToolTip="{x:Static consts:MainConst.EditMihomoConfButtonToolTip}"
+                            Click="EditConfButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{x:Static convs:MainConv.MainProxyButtonIsEnabledConv}">
+                                <Binding Path="IsMihomoExist" />
+                                <Binding Path="IsMihomoIniting" />
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button x:Name="EditHostsConfButton" Style="{StaticResource MoreButton}"
+                            Visibility="{Binding Source={x:Static consts:MainConst.IsAdmin}, Converter={x:Static convs:MainConv.MainAdminControlVisibilityConv}}"
+                            Content="{x:Static consts:MainConst.EditHostsConfButtonContent}"
+                            ToolTip="{x:Static consts:MainConst.EditHostsConfButtonToolTip}"
+                            Click="EditConfButton_Click" />
+
+                    <Button x:Name="DirectStartButton" Style="{StaticResource MoreButton}"
+                            Content="{x:Static consts:MainConst.DirectStartButtonContent}"
+                            ToolTip="{x:Static consts:MainConst.DirectStartButtonToolTip}"
+                            Click="DirectStartButton_Click" />
+                    <Button x:Name="DirectStopButton" Style="{StaticResource MoreButton}" IsEnabled="False"
+                            Content="{x:Static consts:MainConst.DirectStopButtonContent}"
+                            Click="DirectStopButton_Click" />
+                    <Button Style="{StaticResource MoreButton}"
+                            Content="{x:Static consts:MainConst.DirectConfigButtonContent}"
+                            Click="DirectConfigButton_Click" />
+
+                    <Button Style="{StaticResource MoreButton}"
+                            Content="{x:Static consts:MainConst.SettingsButtonContent}"
+                            ToolTip="{x:Static consts:MainConst.SettingsButtonToolTip}"
+                            Click="SettingsButton_Click" />
+                    <Button Style="{StaticResource MoreButton}"
+                            Content="{x:Static consts:MainConst.AboutButtonContent}"
+                            ToolTip="{x:Static consts:MainConst.AboutButtonToolTip}"
+                            Click="AboutButton_Click" />
+                    <Button Focusable="False" Style="{StaticResource MoreButton}" d:Content="# # # #"
+                            Visibility="{Binding Source={x:Static consts:MainConst.IsAdmin}, Converter={x:Static convs:MainConv.MainAdminControlVisibilityConv}}"
+                            Content="{Binding IsFlashing, Converter={x:Static convs:MainConv.MainNoClickButtonContentConv}}"
+                            ToolTip="{Binding IsFlashing, Converter={x:Static convs:MainConv.MainNoClickButtonToolTipConv}}"
+                            Click="NoClickButton_Click" />
+                </WrapPanel>
+
+                <TextBlock x:Name="DirectStatus" Margin="4,6,4,0" FontSize="11.5" Opacity="0.7" TextWrapping="Wrap"
+                           Text="{x:Static consts:MainConst.DirectStatusIdle}" />
+            </StackPanel>
+        </Expander>
+    </Grid>
+</Window>

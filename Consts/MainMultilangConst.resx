@@ -1,0 +1,436 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AboutButtonContent" xml:space="preserve">
+    <value>About Me</value>
+  </data>
+  <data name="AboutButtonToolTip" xml:space="preserve">
+    <value>Click to open the about window</value>
+  </data>
+  <data name="EditHostsConfButtonContent" xml:space="preserve">
+    <value>Edit Hosts Conf</value>
+  </data>
+  <data name="EditHostsConfButtonToolTip" xml:space="preserve">
+    <value>Click to edit hosts conf</value>
+  </data>
+  <data name="EditLocalHostButtonContent" xml:space="preserve">
+    <value>Edit Local Host</value>
+  </data>
+  <data name="EditLocalHostButtonToolTip" xml:space="preserve">
+    <value>Click to edit local host</value>
+  </data>
+  <data name="EditMihomoConfButtonContent" xml:space="preserve">
+    <value>Edit Mihomo Conf</value>
+  </data>
+  <data name="EditMihomoConfButtonToolTip" xml:space="preserve">
+    <value>Click to edit mihomo conf</value>
+  </data>
+  <data name="EditNginxConfButtonContent" xml:space="preserve">
+    <value>Edit Nginx Conf</value>
+  </data>
+  <data name="EditNginxConfButtonToolTip" xml:space="preserve">
+    <value>Click to edit nginx conf</value>
+  </data>
+  <data name="EditUpstreamHostButtonContent" xml:space="preserve">
+    <value>Edit UPSTR. Host</value>
+  </data>
+  <data name="EditUpstreamHostButtonToolTip" xml:space="preserve">
+    <value>Click to edit upstream host</value>
+  </data>
+  <data name="MihomoButtonIsInitingContent" xml:space="preserve">
+    <value>GLB. Purging INIT.</value>
+  </data>
+  <data name="MihomoButtonIsRunningContent" xml:space="preserve">
+    <value>Stop GLB. Purging</value>
+  </data>
+  <data name="MihomoButtonIsRunningToolTip" xml:space="preserve">
+    <value>Click to stop the local Mihomo</value>
+  </data>
+  <data name="MihomoButtonIsStoppedContent" xml:space="preserve">
+    <value>Start GLB. Purging</value>
+  </data>
+  <data name="MihomoButtonIsStoppedToolTip" xml:space="preserve">
+    <value>Click to launch a local Mihomo</value>
+  </data>
+  <data name="NginxButtonIsInitingContent" xml:space="preserve">
+    <value>GLB. Cealing INIT.</value>
+  </data>
+  <data name="NginxButtonIsRunningContent" xml:space="preserve">
+    <value>Stop GLB. Cealing</value>
+  </data>
+  <data name="NginxButtonIsRunningToolTip" xml:space="preserve">
+    <value>Click to stop the local Nginx</value>
+  </data>
+  <data name="NginxButtonIsStoppedContent" xml:space="preserve">
+    <value>Start GLB. Cealing</value>
+  </data>
+  <data name="NginxButtonIsStoppedToolTip" xml:space="preserve">
+    <value>Click to launch a local Nginx</value>
+  </data>
+  <data name="NoClickButtonIsFlashingContent" xml:space="preserve">
+    <value>Click Now</value>
+  </data>
+  <data name="NoClickButtonIsFlashingToolTip" xml:space="preserve">
+    <value>Click this button now</value>
+  </data>
+  <data name="NoClickButtonIsStoppedContent" xml:space="preserve">
+    <value>No Clicking</value>
+  </data>
+  <data name="NoClickButtonIsStoppedToolTip" xml:space="preserve">
+    <value>Do not click this button</value>
+  </data>
+  <data name="SettingsBoxBrowserPathToolTip" xml:space="preserve">
+    <value>Fill in a Chromium-based browser path</value>
+  </data>
+  <data name="SettingsBoxExtraArgsToolTip" xml:space="preserve">
+    <value>Fill in extra Chromium startup args</value>
+  </data>
+  <data name="SettingsBoxUpstreamUrlToolTip" xml:space="preserve">
+    <value>Fill in an upstream host URL</value>
+  </data>
+  <data name="SettingsButtonContent" xml:space="preserve">
+    <value>Appearance Settings</value>
+  </data>
+  <data name="SettingsButtonToolTip" xml:space="preserve">
+    <value>Click to open the settings window</value>
+  </data>
+  <data name="SettingsFunctionButtonBrowserPathContent" xml:space="preserve">
+    <value>Browse Path</value>
+  </data>
+  <data name="SettingsFunctionButtonExtraArgsContent" xml:space="preserve">
+    <value>Clear Args</value>
+  </data>
+  <data name="SettingsFunctionButtonToolTip" xml:space="preserve">
+    <value>Click to process settings</value>
+  </data>
+  <data name="SettingsFunctionButtonUpstreamUrlContent" xml:space="preserve">
+    <value>Reset URL</value>
+  </data>
+  <data name="SettingsModeButtonBrowserPathContent" xml:space="preserve">
+    <value>Browser Path</value>
+  </data>
+  <data name="SettingsModeButtonExtraArgsContent" xml:space="preserve">
+    <value>Extra Args</value>
+  </data>
+  <data name="SettingsModeButtonToolTip" xml:space="preserve">
+    <value>Click to switch settings</value>
+  </data>
+  <data name="SettingsModeButtonUpstreamUrlContent" xml:space="preserve">
+    <value>Upstream URL</value>
+  </data>
+  <data name="BrowserButtonContent" xml:space="preserve">
+    <value>Start Cealing</value>
+  </data>
+  <data name="BrowserButtonToolTip" xml:space="preserve">
+    <value>Click to launch the injected browser</value>
+  </data>
+  <data name="UpdateUpstreamHostButtonContent" xml:space="preserve">
+    <value>Update Upstream Host</value>
+  </data>
+  <data name="UpdateUpstreamHostButtonToolTip" xml:space="preserve">
+    <value>Click to update upstream host</value>
+  </data>
+  <data name="_BrowserPathDialogFilterFileType" xml:space="preserve">
+    <value>Browser</value>
+  </data>
+  <data name="_CealHostErrorPrompt" xml:space="preserve">
+    <value>Some cealing hosts contain syntax errors and cannot be recognized. Do you want to continue anyway?</value>
+  </data>
+  <data name="_GameClickOnceMsg" xml:space="preserve">
+    <value>I know you would click me, but nothing will actually happen. Whee~</value>
+  </data>
+  <data name="_GameClickThreeMsg" xml:space="preserve">
+    <value>Ugh, what are you doing. Please stop, I don't want to hurt anyone. Stop please, this is your last chance. Ugh, I can't control it anymore</value>
+  </data>
+  <data name="_GameClickTwiceMsg" xml:space="preserve">
+    <value>No no no, don't click me. Sorry, I shouldn't have lied to you, I am a cursed button, and continuing to click me will bring disaster to the entire Sheas Cealer. Please believe me. This is not a game, and there are no new features here. Listen to me and use the normal functions. Please</value>
+  </data>
+  <data name="_GameEndingMsg" xml:space="preserve">
+    <value>You defeated the evil button and saved Sheas Cealer. You are the HERO!</value>
+  </data>
+  <data name="_GameGradeMsg" xml:space="preserve">
+    <value>Button Remaining HP.</value>
+  </data>
+  <data name="_GameReviewEndingMsg" xml:space="preserve">
+    <value>It's dead. You're the HERO of Sheas Cealer</value>
+  </data>
+  <data name="_GameStartMsg" xml:space="preserve">
+    <value>No, please kill me. I... can't control it...</value>
+  </data>
+  <data name="_KillBrowserProcessPrompt" xml:space="preserve">
+    <value>All processes of the selected browser will be closed before launching. Do you want to continue?</value>
+  </data>
+  <data name="_LaunchMihomoErrorMsg" xml:space="preserve">
+    <value>Mihomo failed to launch</value>
+  </data>
+  <data name="_LaunchNginxErrorPrompt" xml:space="preserve">
+    <value>Nginx failed to launch. Do you want to open the error log?</value>
+  </data>
+  <data name="_LaunchNginxFlashingPrompt" xml:space="preserve">
+    <value>Warning: The proxy core is under attack and failes to conceal SNI. The SNI removal mode has been turned on urgently. Do you want to continue?</value>
+  </data>
+  <data name="_LaunchProxyPrompt" xml:space="preserve">
+    <value>Please remember to come back and stop the proxy manually after use. Do you want to continue?</value>
+  </data>
+  <data name="_MihomoConfErrorMsg" xml:space="preserve">
+    <value>The mihomo conf contains syntax errors and cannot be recognized</value>
+  </data>
+  <data name="_NginxHttpPortOccupiedPrompt" xml:space="preserve">
+    <value>The local port 80 is occupied. Do you want to use port {0} to continue? This may cause the http connection to fail to automatically jump to https</value>
+  </data>
+  <data name="_NginxHttpsPortOccupiedPrompt" xml:space="preserve">
+    <value>The local port 443 is occupied. Do you want to use port {0} to continue? This may cause the global cealing to not work properly</value>
+  </data>
+  <data name="_OverrideUpstreamHostPrompt" xml:space="preserve">
+    <value>There is an update available. Do you want to update upstream host? If No it will only open the upstream host web page for you</value>
+  </data>
+  <data name="_UpdateUpstreamHostSuccessMsg" xml:space="preserve">
+    <value>Update successfully</value>
+  </data>
+  <data name="_UpstreamHostUtdMsg" xml:space="preserve">
+    <value>Upstream host is already up to date</value>
+  </data>
+  <data name="SubtitleText" xml:space="preserve">
+    <value>No proxy · everything runs on this PC</value>
+  </data>
+  <data name="PowerButtonToolTip" xml:space="preserve">
+    <value>Click to connect or disconnect: hosts + local Nginx + fragmented X relay</value>
+  </data>
+  <data name="StatusDisconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="StatusConnecting" xml:space="preserve">
+    <value>Connecting…</value>
+  </data>
+  <data name="StatusConnected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="StatusCaptionIdle" xml:space="preserve">
+    <value>Press the button. hosts, a local Nginx and the X relay are set up on this PC only.</value>
+  </data>
+  <data name="StatusCaptionConnected" xml:space="preserve">
+    <value>YouTube and other rules go through local Nginx; X goes through the fragmented direct relay.</value>
+  </data>
+  <data name="RelayStatusIdle" xml:space="preserve">
+    <value>X relay: not started</value>
+  </data>
+  <data name="RelayStatusRunning" xml:space="preserve">
+    <value>X relay: listening on {0}</value>
+  </data>
+  <data name="RelayStatusFailed" xml:space="preserve">
+    <value>X relay failed: {0}</value>
+  </data>
+  <data name="SiteChecksHeader" xml:space="preserve">
+    <value>Connectivity</value>
+  </data>
+  <data name="SiteCheckPending" xml:space="preserve">
+    <value>Not checked</value>
+  </data>
+  <data name="SiteCheckChecking" xml:space="preserve">
+    <value>Checking…</value>
+  </data>
+  <data name="SiteCheckOk" xml:space="preserve">
+    <value>OK · HTTP {0} · {1} ms</value>
+  </data>
+  <data name="SiteCheckFail" xml:space="preserve">
+    <value>Failed · {0}</value>
+  </data>
+  <data name="SiteCheckNotConnected" xml:space="preserve">
+    <value>Connect first</value>
+  </data>
+  <data name="SiteCheckTimeout" xml:space="preserve">
+    <value>timeout</value>
+  </data>
+  <data name="RecheckButtonContent" xml:space="preserve">
+    <value>Recheck</value>
+  </data>
+  <data name="CopyDiagnosticsButtonContent" xml:space="preserve">
+    <value>Copy diagnostics</value>
+  </data>
+  <data name="_CopyDiagnosticsDoneMsg" xml:space="preserve">
+    <value>Diagnostics copied to the clipboard. Paste them when reporting a problem.</value>
+  </data>
+  <data name="MoreFeaturesHeader" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="MoreFeaturesHint" xml:space="preserve">
+    <value>Legacy modes and editors. The button above is all you normally need.</value>
+  </data>
+  <data name="NonAdminHint" xml:space="preserve">
+    <value>One-click connect needs administrator rights (it edits hosts and listens on local port 443).</value>
+  </data>
+  <data name="RelaunchAsAdminButtonContent" xml:space="preserve">
+    <value>Reopen as administrator</value>
+  </data>
+  <data name="_PowerNeedsAdminMsg" xml:space="preserve">
+    <value>Please reopen Sheas Cealer as administrator to use one-click connect.</value>
+  </data>
+  <data name="_ExitWhileConnectedPrompt" xml:space="preserve">
+    <value>Still connected. Exiting will disconnect and restore hosts and certificates. Exit now?</value>
+  </data>
+  <data name="_RelayListenFailedMsg" xml:space="preserve">
+    <value>The X relay could not listen on {0}: {1}
+Other sites still work; X will not.</value>
+  </data>
+  <data name="DirectStartButtonContent" xml:space="preserve">
+    <value>Browser direct (experimental)</value>
+  </data>
+  <data name="DirectStartButtonToolTip" xml:space="preserve">
+    <value>Local relay + encrypted DNS + TLS fragmentation in a separate browser window. Stop the global mode first.</value>
+  </data>
+  <data name="DirectStopButtonContent" xml:space="preserve">
+    <value>Stop direct</value>
+  </data>
+  <data name="DirectConfigButtonContent" xml:space="preserve">
+    <value>Direct / relay config</value>
+  </data>
+  <data name="DirectStatusIdle" xml:space="preserve">
+    <value>Browser direct not started.</value>
+  </data>
+  <data name="DirectStatusStarted" xml:space="preserve">
+    <value>Separate browser started; keep this window open. Only that browser uses the local relay.</value>
+  </data>
+  <data name="DirectStatusStopped" xml:space="preserve">
+    <value>Stopped. Close that browser window before starting again.</value>
+  </data>
+  <data name="_DirectStopFirstMsg" xml:space="preserve">
+    <value>Stop browser direct before using this mode.</value>
+  </data>
+  <data name="_DirectStopGlobalFirstMsg" xml:space="preserve">
+    <value>Disconnect the global mode before starting browser direct.</value>
+  </data>
+  <data name="_DirectBrowserUnsupportedMsg" xml:space="preserve">
+    <value>Please choose Edge, Chrome or Brave as the browser.</value>
+  </data>
+  <data name="_DirectStartFailedPrefix" xml:space="preserve">
+    <value>Start failed: </value>
+  </data>
+  <data name="SiteCheckRelayEvidence" xml:space="preserve">
+    <value>; relay: {0}</value>
+  </data>
+  <data name="LineProbeButtonContent" xml:space="preserve">
+    <value>Line diagnosis</value>
+  </data>
+  <data name="LineProbeRunning" xml:space="preserve">
+    <value>Line diagnosis running (about 1 minute): control handshakes against the X edge IPs…</value>
+  </data>
+  <data name="LineProbeVerdict" xml:space="preserve">
+    <value>Diagnosis: {0}</value>
+  </data>
+</root>
