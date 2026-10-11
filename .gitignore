@@ -363,7 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Downloaded build inputs and local packages
-vendor/
+vendor/*
 artifacts/
 logs/
 
