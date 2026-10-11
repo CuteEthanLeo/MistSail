@@ -404,7 +404,7 @@ def scene_intro(layer, d, t, dur):
     sa = ease_out(seg(t, 1.6, 0.9))
     d.text((cx, cy + 210 + (1 - sa) * 30), "— 让握手藏进雾里 —", font=font("light", 40), fill=with_a(GREY, sa), anchor="mm")
     # 标签
-    tags = ["WPF · .NET 8", "开源", "无代理服务器", "本机接管握手"]
+    tags = ["WPF · .NET 8", "开源", "纯本机运行", "TLS 握手隐私实验"]
     for i, tg in enumerate(tags):
         ka = ease_out_back(seg(t, 2.3 + i * 0.18, 0.7))
         if ka <= 0:
@@ -452,67 +452,70 @@ def scene_problem(layer, d, t, dur):
                 d.line((ex, ey + 40, px, by - 30), fill=with_a(RED, near * 0.6 * a0), width=2)
     eye_a = ease_out(seg(t, 0.5, 0.8))
     draw_eye(layer, d, ex, ey, eye_a, alert)
-    d.text((ex, ey - 90), "链路上的中间设备", font=font("reg", 26), fill=with_a(GREY, eye_a), anchor="mm")
+    d.text((ex, ey - 90), "公共 Wi-Fi 等不可信网络中的设备", font=font("reg", 26), fill=with_a(GREY, eye_a), anchor="mm")
     # 放大的明文标签
     la = ease_out(seg(t, 3.2, 0.8))
     if la > 0:
         yb = by + 200
         rrect(d, (W / 2 - 520, yb - 50, W / 2 + 520, yb + 50), 20, fill=with_a((40, 20, 30), la * 0.9), outline=with_a(RED, la * 0.8), width=2)
-        d.text((W / 2, yb), "明文  ·  未加密  ·  任何中间设备都能读到你要访问的域名", font=font("reg", 32), fill=with_a((254, 202, 202), la), anchor="mm")
+        d.text((W / 2, yb), "明文  ·  未加密  ·  同一网络里的设备都能读到你要访问的域名", font=font("reg", 32), fill=with_a((254, 202, 202), la), anchor="mm")
 
 
 def scene_block(layer, d, t, dur):
     a0 = ease_out(seg(t, 0.0, 0.8))
     draw_heading(d, "于是「你在访问谁」成了公开信息", 150, a0, 60, slide=(1 - a0) * -30)
-    d.text((W / 2, 225), "中间设备据此嗅探、劫持，甚至直接重置连接", font=font("light", 30), fill=with_a(GREY, ease_out(seg(t, 0.5, 0.8))), anchor="mm")
+    d.text((W / 2, 225), "热点运营方、广告追踪器据此记录你的浏览习惯，日积月累拼出一份用户画像", font=font("light", 30), fill=with_a(GREY, ease_out(seg(t, 0.5, 0.8))), anchor="mm")
     by = 520
     draw_browser(d, 180, by - 110, 340, 220, a0)
     x1, x2 = 540, W - 500
     ex, ey = W / 2, by - 160
-    # 包飞到中间被截断
+    draw_wire(d, x1, x2, by, a0 * 0.6, phase=t * 1.5)
+    draw_server(d, W - 180 - 300, by - 110, 300, 220, a0)
+    # 包从浏览器飞到服务器，路过眼睛时被抄录一份
     tt = t - 0.8
-    prog = ease_in_out(clamp(tt / 1.6))
-    px = lerp(x1 + 60, ex, prog)
-    hit = seg(t, 2.4, 0.5)
-    draw_wire(d, x1, ex - 40, by, a0 * 0.6, phase=t * 1.5)
-    draw_wire(d, ex + 40, x2, by, a0 * 0.25, color=RED if hit > 0 else GREY, phase=t * 1.5)
-    draw_server(d, W - 180 - 300, by - 110, 300, 220, a0 * (1 - 0.5 * hit), ok=None if hit == 0 else False)
-    alert = clamp(prog * 1.2)
-    if tt > 0 and hit < 1:
-        pa = 1 - hit
-        shake = math.sin(t * 60) * 6 * hit
-        draw_pill(d, px + shake, by, [("ClientHello  ", GREY), ("SNI: ", WHITE), ("example.com", RED)], pa * a0, f=font("mono", 26))
-    draw_eye(layer, d, ex, ey, a0, alert)
-    d.text((ex, ey - 90), "链路上的中间设备", font=font("reg", 26), fill=with_a(GREY, a0), anchor="mm")
-    # RST 闪现 + 碎片
-    if hit > 0:
-        ka = ease_out_back(hit)
-        f = font("bold", 64)
-        sc = 0.7 + 0.3 * ka
-        paste_glow(layer, (ex, by), 160, RED, 0.7 * min(1, hit * 2) * (1 - 0.3 * seg(t, 3.5, 1)))
-        d.text((ex, by + 4), "连接被重置", font=font("bold", int(56 * sc)), fill=with_a(WHITE, min(1, hit * 2)), anchor="mm")
-        d.text((ex, by + 70), "TCP RST  /  TLS alert  /  劫持到别处", font=font("reg", 24), fill=with_a(RED, ease_out(seg(t, 2.9, 0.6))), anchor="mm")
-        # 碎片飞散
-        rng = np.random.RandomState(7)
-        for i in range(18):
-            ang = rng.uniform(0, 2 * math.pi)
-            sp = rng.uniform(120, 360)
-            dt = clamp((t - 2.4) / 1.4)
-            r = sp * ease_out(dt)
-            fa = (1 - dt) * a0
-            if fa > 0:
-                qx, qy = ex + math.cos(ang) * r, by + math.sin(ang) * r * 0.6
-                s = 6 * (1 - dt) + 2
-                d.rectangle((qx - s, qy - s, qx + s, qy + s), fill=with_a(RED, fa))
-    # 底部结论
-    la = ease_out(seg(t, 4.3, 0.8))
+    prog = ease_in_out(clamp(tt / 2.6))
+    px = lerp(x1 + 60, x2 - 60, prog)
+    near = 1 - clamp(abs(px - ex) / 220)
+    if tt > 0 and prog < 1:
+        pa = min(1, tt * 6, (1 - prog) * 8)
+        draw_pill(d, px, by, [("ClientHello  ", GREY), ("SNI: ", WHITE), ("example.com", RED)], pa * a0, f=font("mono", 26))
+        if near > 0.05:
+            d.line((ex, ey + 40, px, by - 30), fill=with_a(RED, near * 0.6 * a0), width=2)
+    logged = seg(t, 2.0, 0.5)
+    draw_eye(layer, d, ex, ey, a0, max(near, logged))
+    d.text((ex, ey - 90), "不可信网络中的设备", font=font("reg", 26), fill=with_a(GREY, a0), anchor="mm")
+    # 访问记录卡片：眼睛右侧，逐行写入
+    la = ease_out(seg(t, 2.0, 0.6))
     if la > 0:
+        cx0, cy0, cw, ch = ex + 128, ey - 95, 348, 190
+        rrect(d, (cx0, cy0, cx0 + cw, cy0 + ch), 16, fill=with_a((40, 20, 30), la * 0.92), outline=with_a(RED, la * 0.8), width=2)
+        d.text((cx0 + 18, cy0 + 22), "访问记录", font=font("reg", 18), fill=with_a((254, 202, 202), la), anchor="lm")
+        d.text((cx0 + 110, cy0 + 22), "·  192.168.1.23", font=font("mono", 18), fill=with_a((254, 202, 202), la * 0.8), anchor="lm")
+        d.line((cx0 + 14, cy0 + 40, cx0 + cw - 14, cy0 + 40), fill=with_a(RED, la * 0.5), width=1)
+        rows = [("12:01:07", "example.com"), ("12:01:09", "mail.example.net"), ("12:01:12", "shop.example.org")]
+        for i, (ts, host) in enumerate(rows):
+            ra = ease_out(seg(t, 2.3 + i * 0.55, 0.4))
+            if ra <= 0:
+                continue
+            yy = cy0 + 62 + i * 30
+            d.text((cx0 + 18, yy), ts, font=font("mono", 18), fill=with_a(GREY, ra), anchor="lm")
+            d.text((cx0 + 130, yy), host, font=font("mono", 18), fill=with_a(WHITE, ra), anchor="lm")
+            # 光标
+            if ra < 1:
+                d.rectangle((cx0 + 130 + text_w(d, host, font("mono", 18)) + 4, yy - 9, cx0 + 130 + text_w(d, host, font("mono", 18)) + 14, yy + 9), fill=with_a(RED, 0.8))
+        ta = ease_out(seg(t, 4.0, 0.6))
+        if ta > 0:
+            bob = math.sin(t * 3) * 3
+            d.text((cx0 + cw / 2, cy0 + 162 + bob), "→  用户画像 · 广告定向 · 行为分析", font=font("reg", 21), fill=with_a(AMBER, ta), anchor="mm")
+    # 底部结论
+    la2 = ease_out(seg(t, 4.6, 0.8))
+    if la2 > 0:
         yb = by + 210
-        items = [("内容", "已加密", GREEN), ("目标域名", "明文可见", RED), ("连接", "可被识别与干预", RED)]
+        items = [("内容", "已加密", GREEN), ("目标域名", "明文可见", RED), ("浏览记录", "可被收集与画像", AMBER)]
         total_w = 3 * 360 + 2 * 40
         x = W / 2 - total_w / 2
         for i, (k, v, c) in enumerate(items):
-            ia = ease_out(seg(t, 4.3 + i * 0.2, 0.7))
+            ia = ease_out(seg(t, 4.6 + i * 0.2, 0.7))
             rrect(d, (x, yb - 55, x + 360, yb + 55), 18, fill=with_a(PANEL, ia * 0.95), outline=with_a(c, ia * 0.7), width=2)
             d.text((x + 180, yb - 18), k, font=font("reg", 26), fill=with_a(GREY, ia), anchor="mm")
             d.text((x + 180, yb + 22), v, font=font("bold", 30), fill=with_a(c, ia), anchor="mm")
@@ -522,7 +525,7 @@ def scene_block(layer, d, t, dur):
 def scene_solution(layer, d, t, dur):
     a0 = ease_out(seg(t, 0.0, 0.8))
     draw_heading(d, "雾帆的做法：不加代理，在本机接管握手", 140, a0, 56, slide=(1 - a0) * -30)
-    d.text((W / 2, 212), "hosts 把域名指向本机 → 常规站点由本机 nginx 改写 SNI 后连向真实服务器 → Cloudflare 类站点改走回环中继，把 ClientHello 切片透传", font=font("light", 26), fill=with_a(GREY, ease_out(seg(t, 0.6, 0.8))), anchor="mm")
+    d.text((W / 2, 212), "hosts 把域名指向本机 → 常规站点由本机 nginx 改写 SNI 后连向真实服务器 → 不适合改写的站点改走回环中继，把 ClientHello 切片透传", font=font("light", 26), fill=with_a(GREY, ease_out(seg(t, 0.6, 0.8))), anchor="mm")
     by = 540
     bx, bw = 120, 300
     draw_browser(d, bx, by - 100, bw, 200, a0)
@@ -581,7 +584,7 @@ def scene_solution(layer, d, t, dur):
     # 眼睛：疑惑
     eye_a = ease_out(seg(t, 1.0, 0.8))
     draw_eye(layer, d, ex, ey, eye_a, alert)
-    d.text((ex, ey - 90), "中间设备", font=font("reg", 26), fill=with_a(GREY, eye_a), anchor="mm")
+    d.text((ex, ey - 90), "旁观设备", font=font("reg", 26), fill=with_a(GREY, eye_a), anchor="mm")
     qa = ease_out(seg(t, 5.2, 0.6))
     if qa > 0:
         bob = math.sin(t * 3) * 4
@@ -702,7 +705,7 @@ def draw_app_mock(layer, d, x, y, alpha, t):
         bx = x + w - 40 - (3 - i) * 108
         rrect(d, (bx, cy2 + 12, bx + 100, cy2 + 40), 8, fill=with_a((233, 239, 252), alpha))
         d.text((bx + 50, cy2 + 26), lb, font=font("reg", 14), fill=with_a((40, 90, 200), alpha), anchor="mm")
-    rows = [("站点 A", "ServerHello 180 ms"), ("站点 B", "ServerHello 96 ms"), ("DoH 解析", "Cloudflare / Quad9 OK")]
+    rows = [("站点 A", "ServerHello 180 ms"), ("站点 B", "ServerHello 96 ms"), ("DoH 解析", "两组公共解析器 OK")]
     for i, (k, v) in enumerate(rows):
         ra = ease_out(seg(t, 2.3 + i * 0.3, 0.5))
         yy = cy2 + 64 + i * 26
@@ -720,7 +723,7 @@ def scene_ui(layer, d, t, dur):
     ma = ease_out(seg(t, 0.3, 0.9))
     draw_app_mock(layer, d, 200 + (1 - ma) * -60, 200, ma, t)
     feats = [("一键连接", "主界面只保留一个电源按钮，旧功能收进「更多功能」", CYAN),
-             ("无代理服务器", "没有境外节点、没有 VPN，TCP 连接直接从本机发往目标", GREEN),
+             ("无代理服务器", "不依赖任何远端节点或 VPN，TCP 连接直接从本机发往目标", GREEN),
              ("根证书透明可查", "自签证书仅信任本机 nginx，可随时在证书管理器里删除", VIOLET),
              ("开源可审计", "C# 源码全部公开，核心分片逻辑一百多行", AMBER)]
     for i, (k, v, c) in enumerate(feats):
@@ -753,10 +756,10 @@ def scene_outro(layer, d, t, dur):
     if da > 0:
         yb = H / 2 + 190
         rrect(d, (W / 2 - 700, yb - 70, W / 2 + 700, yb + 70), 22, fill=with_a((30, 26, 20), da * 0.9), outline=with_a(AMBER, da * 0.8), width=2)
-        d.text((W / 2, yb - 22), "本项目及相关资源仅供抵御网络非法监听与开展网络安全研究使用", font=font("bold", 30), fill=with_a((254, 240, 200), da), anchor="mm")
+        d.text((W / 2, yb - 22), "本项目仅供在自有设备上保护握手隐私、抵御网络非法监听与开展网络安全研究", font=font("bold", 30), fill=with_a((254, 240, 200), da), anchor="mm")
         d.text((W / 2, yb + 26), "请遵守所在地法律法规 · 不保证任何站点可用 · 使用前请阅读注意事项与用户协议", font=font("reg", 24), fill=with_a(AMBER, da), anchor="mm")
     ga = ease_out(seg(t, 2.4, 0.8))
-    d.text((W / 2, H / 2 + 318), "开源  ·  本地改版  ·  2026", font=font("reg", 30), fill=with_a(CYAN, ga), anchor="mm")
+    d.text((W / 2, H / 2 + 318), "开源  ·  本地改版  ·  ECH 普及前的过渡方案  ·  2026", font=font("reg", 30), fill=with_a(CYAN, ga), anchor="mm")
     ca = ease_out(seg(t, CREDIT_AT, 0.8))
     if ca > 0:
         paste_glow(layer, (W / 2, H / 2 + 372), 140, VIOLET, 0.25 * ca)
@@ -779,20 +782,20 @@ SCENES = [
 XFADE = 0.6
 
 SUBS = [
-    (0.8, 5.6, "雾帆 MistSail：一款基于 WPF / .NET 8 的开源 SNI 处理工具"),
+    (0.8, 5.6, "雾帆 MistSail：一款基于 WPF / .NET 8 的开源 TLS 握手隐私工具"),
     (6.5, 11.0, "HTTPS 加密了网页内容，却有一处例外：握手阶段的 SNI"),
-    (11.0, 15.8, "SNI 以明文写着你要访问的域名，链路上任何设备都能看见"),
-    (16.5, 20.5, "于是中间设备可以据此嗅探、劫持，甚至直接重置你的连接"),
+    (11.0, 15.8, "SNI 以明文写着你要访问的域名，公共 Wi-Fi 上的其他设备都能看见"),
+    (16.5, 20.5, "于是不可信网络里的设备可以据此记录你的浏览习惯，拼出用户画像"),
     (20.5, 23.8, "内容是加密的，但「你在访问谁」却是公开的"),
     (24.5, 29.0, "雾帆的思路：不加代理，在本机接管握手"),
     (29.0, 34.0, "hosts 把域名指向本机，由本机 nginx 改写 SNI 后连向真实服务器"),
-    (34.0, 37.8, "Cloudflare 类站点则由回环中继把 ClientHello 切片透传"),
+    (34.0, 37.8, "不适合改写的站点则由回环中继把 ClientHello 切片透传"),
     (38.5, 43.5, "核心代码只有一百多行：定位 SNI 扩展，按字节切分，重排记录边界"),
     (43.5, 47.5, "根证书本机自签，只装当前用户、只信任本机 nginx；分片路线不解密"),
     (47.5, 49.8, "所有参数都在一份 JSON 里，分片字节、间隔、模式随时可调"),
     (50.5, 54.0, "主界面只有一个电源按钮，连通性检测与诊断信息一键复制"),
     (54.0, 56.8, "无代理服务器，不改路由，流量不经任何第三方"),
-    (57.5, 61.6, "开源可审计 · 仅供抵御网络非法监听与网络安全研究 · 请遵守当地法律法规"),
+    (57.5, 61.6, "开源可审计 · 仅供保护握手隐私与网络安全研究 · 请遵守当地法律法规"),
 ]
 
 
@@ -831,7 +834,7 @@ def draw_chrome(d, t):
     if a <= 0:
         return
     draw_tri(d, 72, 56, 14, fill=with_a(CYAN, a * 0.3), outline=with_a(CYAN, a), width=3)
-    d.text((104, 56), "雾帆 MistSail  ·  项目介绍", font=font("reg", 24), fill=with_a(GREY, a), anchor="lm")
+    d.text((104, 56), "雾帆 MistSail  ·  开源项目分享", font=font("reg", 24), fill=with_a(GREY, a), anchor="lm")
     # 进度条
     p = t / DURATION
     d.rectangle((W - 360, 52, W - 60, 56), fill=with_a((40, 50, 78), a))
@@ -896,7 +899,8 @@ def main():
             Image.frombytes("RGB", (W, H), data).save(os.path.join(OUT_DIR, f"preview_{sec:05.1f}.png"))
         print("preview done")
         return
-    workers = max(2, min(10, os.cpu_count() or 4))
+    # 每个编码进程约占 0.5~1 GB 内存；内存紧张时用 RENDER_WORKERS 环境变量调小
+    workers = int(os.environ.get("RENDER_WORKERS", "0")) or max(2, min(10, os.cpu_count() or 4))
     n = workers * 2
     bounds = [(k * TOTAL // n, (k + 1) * TOTAL // n) for k in range(n)]
     jobs = [(k, s, e, ffmpeg) for k, (s, e) in enumerate(bounds)]
