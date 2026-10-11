@@ -6,7 +6,7 @@
 // --write-config regenerates <repo-root>\direct-config.json from the built-in defaults so the
 // shipped file can never drift from DirectOptions.
 
-using Sheas_Cealer.Direct;
+using MistSail.Direct;
 using System.IO;
 using System.Buffers.Binary;
 using System.Net;

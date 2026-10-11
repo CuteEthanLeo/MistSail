@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Sheas-Cealer.csproj" />
+    <ProjectReference Include="..\..\MistSail.csproj" />
   </ItemGroup>
 
 </Project>

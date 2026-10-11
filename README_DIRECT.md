@@ -1,4 +1,4 @@
-# Sheas Cealer 1.1.4 Direct 实验版
+# 雾帆 MistSail · Direct 实验说明（基于 Sheas Cealer 1.1.4）
 
 > Direct.3 起主界面只有一个“连接”大按钮（全局模式）；本文描述的“浏览器直连（实验）”按钮和“直连 / 分片配置”已移到底部“更多功能”折叠区。X 的处理方式见 README_X_RELAY.md。
 
@@ -11,7 +11,7 @@
 
 1. 将压缩包全部解压到一个可写的新文件夹，勿覆盖正在运行的旧版。
 2. 关闭现有梯子，包括 VPN/TUN、系统代理和代理软件后台路由；先在旧版停止“全局伪造”和“全局净化”，再退出旧版。
-3. 双击 `Sheas_Cealer.exe`，普通用户权限即可。自包含 x64 包附带 .NET 8 运行时。
+3. 双击 `MistSail.exe`，普通用户权限即可。自包含 x64 包附带 .NET 8 运行时。
 4. 浏览器路径选择当前已安装的 Edge、Chrome 或 Brave。
 5. 点击下方新增的 **浏览器直连（实验）**。保持这个程序窗口打开，在新打开的独立浏览器窗口内访问站点。
 6. 查看 YouTube 视频实际能否播放、拖动进度；检查 X 的图片/视频，以及 GitHub 的页面、raw 和下载。页面封面或 TCP 连接成功不能代表完整功能成功。
@@ -31,7 +31,7 @@
 - 新增 `Direct/DohResolver.cs`：RFC 8484 DoH 二进制查询，验证响应问题及 DNS 记录；根据 CNAME 关系筛选真实地址、遵守短期 TTL，合并并发解析请求。并行访问配置的 DNS 服务，使用首个成功答案；DNS 服务也用指定 IP 引导及正常 HTTPS 证书校验，不回退系统 DNS。
 - 新增 `Direct/FragmentingStream.cs`：仅首个 TLS ClientHello 的 SNI 区域分段；可选 TLS record、TCP 写入分段或关闭。分段不修改握手消息、应用数据或视频内容。跨多个原始 TLS record 的 ClientHello 保持原样。
 - 新模式保留浏览器正常证书校验，不使用原模式的 `--ignore-certificate-errors`，不安装根证书，不编辑 hosts，不设置系统代理，不建立 TUN。
-- 使用独立浏览器资料目录 `%LOCALAPPDATA%\Sheas-Cealer-Direct\BrowserProfiles`，不会强制结束日常浏览器进程，不复用旧的附加参数。禁用 QUIC，使 HTTPS 使用 TCP 路径。
+- 使用独立浏览器资料目录 `%LOCALAPPDATA%\MistSail\BrowserProfiles`，不会强制结束日常浏览器进程，不复用旧的附加参数。禁用 QUIC，使 HTTPS 使用 TCP 路径。
 - 原有规则加载改为等待完成后启动，并发布完整规则快照；修复文件名解析及创建、删除、重命名规则时的重新加载。
 - 原有静态规则中空目标不再自动替换成 `127.0.0.1`。上游 `*.googlevideo.com` 的空目标会被跳过；新模式逐个解析实际的视频 CDN 主机名。
 - 打开主界面不自动进行网络更新或清理 hosts/证书。上游更新由按钮触发；“关于项目”仍保留原来的版本检查行为。
@@ -62,8 +62,8 @@
 ## 重新构建
 
 ```powershell
-dotnet build .\Sheas-Cealer.sln -c Release
-dotnet publish .\Sheas-Cealer.csproj -c Release -r win-x64 --self-contained true -o .\artifacts\Sheas-Cealer-Direct-win-x64
+dotnet build .\MistSail.sln -c Release
+dotnet publish .\MistSail.csproj -c Release -r win-x64 --self-contained true -o .\artifacts\MistSail-win-x64
 ```
 
 完整压缩包用 `Build-Package.ps1` 生成。构建脚本只恢复依赖、编译和打包，不启动任何网络功能或做连通性测试。

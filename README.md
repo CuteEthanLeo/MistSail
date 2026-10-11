@@ -15,6 +15,10 @@ HTTPS 加密了网页内容，但 TLS 握手第一个数据包 ClientHello 里�
 
 主界面只有一个电源按钮，旧功能收进「更多功能」；连通性卡片、线路探测与「复制诊断信息」用于排查。
 
+## 下载
+
+到 [Releases](https://github.com/CuteEthanLeo/MistSail/releases) 下载 `MistSail-v*-win-x64.zip`，完整解压到新目录后右键 `MistSail.exe` 以管理员身份运行。压缩包为自包含 x64 版本，无需另装 .NET。
+
 ## 关于根证书，请如实了解
 
 - 全局模式启动时会生成一枚**自签根证书**并安装到**当前用户**的受信任根证书存储，仅用于让浏览器信任本机 nginx。

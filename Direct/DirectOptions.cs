@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
 
-namespace Sheas_Cealer.Direct;
+namespace MistSail.Direct;
 
 internal sealed class DohServer
 {

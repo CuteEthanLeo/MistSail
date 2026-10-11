@@ -2,7 +2,7 @@
 using System;
 using System.Windows;
 
-namespace Sheas_Cealer.Proces;
+namespace MistSail.Proces;
 
 internal class BrowserProc : Proc
 {

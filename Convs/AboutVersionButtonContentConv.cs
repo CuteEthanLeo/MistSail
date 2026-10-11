@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace Sheas_Cealer.Convs;
+namespace MistSail.Convs;
 
 internal class AboutVersionButtonContentConv : IMultiValueConverter
 {
@@ -10,9 +10,9 @@ internal class AboutVersionButtonContentConv : IMultiValueConverter
     {
         string versionButtonLabelContent = (string)values[0];
         string versionButtonVersionContent = (string)values[1];
-        bool isSheasCealerUtd = (bool)values[2];
+        bool isMistSailUtd = (bool)values[2];
 
-        return $"{versionButtonLabelContent} {versionButtonVersionContent}" + (isSheasCealerUtd ? string.Empty : " *");
+        return $"{versionButtonLabelContent} {versionButtonVersionContent}" + (isMistSailUtd ? string.Empty : " *");
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();

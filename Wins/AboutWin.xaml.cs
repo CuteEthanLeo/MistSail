@@ -1,7 +1,7 @@
 ﻿using Ona_Core;
-using Sheas_Cealer.Consts;
-using Sheas_Cealer.Preses;
-using Sheas_Cealer.Utils;
+using MistSail.Consts;
+using MistSail.Preses;
+using MistSail.Utils;
 using System;
 using System.Diagnostics;
 using System.Net.Http;
@@ -11,7 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace Sheas_Cealer.Wins;
+namespace MistSail.Wins;
 
 public partial class AboutWin : Window
 {
@@ -42,8 +42,8 @@ public partial class AboutWin : Window
                 AboutClient.DefaultRequestHeaders.Clear();
 
                 foreach (JsonProperty releaseInfoContent in releaseInfoObject.EnumerateObject())
-                    if (releaseInfoContent.Name == "name" && releaseInfoContent.Value.ToString() != AboutConst.VersionButtonVersionContent)
-                        AboutPres.IsSheasCealerUtd = false;
+                    if (releaseInfoContent.Name == "tag_name" && releaseInfoContent.Value.ToString().TrimStart('v') != AboutConst.VersionButtonVersionContent)
+                        AboutPres.IsMistSailUtd = false;
             }
             catch { }
         });
@@ -53,10 +53,7 @@ public partial class AboutWin : Window
     {
         Button senderButton = (Button)sender;
 
-        if (senderButton == VersionButton)
-            MessageBox.Show($"{AboutConst._ReleasePagePasswordLabel} 3wnj");
-
-        ProcessStartInfo processStartInfo = new(senderButton == EmailButton ? "mailto:" : string.Empty + senderButton.ToolTip) { UseShellExecute = true };
+        ProcessStartInfo processStartInfo = new((string)senderButton.ToolTip) { UseShellExecute = true };
 
         try { Process.Start(processStartInfo); }
         catch (UnauthorizedAccessException)

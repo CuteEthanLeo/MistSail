@@ -1,15 +1,15 @@
 ﻿using MaterialDesignThemes.Wpf;
-using Sheas_Cealer.Consts;
-using Sheas_Cealer.Preses;
-using Sheas_Cealer.Props;
-using Sheas_Cealer.Utils;
+using MistSail.Consts;
+using MistSail.Preses;
+using MistSail.Props;
+using MistSail.Utils;
 using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace Sheas_Cealer.Wins;
+namespace MistSail.Wins;
 
 public partial class SettingsWin : Window
 {

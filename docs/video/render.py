@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Sheas Cealer 介绍视频渲染器：Pillow 逐帧绘制 -> ffmpeg(libx264) 分段编码 -> 合并 + 配乐。"""
+"""雾帆 MistSail 介绍视频渲染器：Pillow 逐帧绘制 -> ffmpeg(libx264) 分段编码 -> 合并 + 配乐。"""
 import math, os, re, subprocess, sys
 from multiprocessing import Pool
 import numpy as np

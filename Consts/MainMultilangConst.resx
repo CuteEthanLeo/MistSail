@@ -259,16 +259,16 @@
     <value>Ugh, what are you doing. Please stop, I don't want to hurt anyone. Stop please, this is your last chance. Ugh, I can't control it anymore</value>
   </data>
   <data name="_GameClickTwiceMsg" xml:space="preserve">
-    <value>No no no, don't click me. Sorry, I shouldn't have lied to you, I am a cursed button, and continuing to click me will bring disaster to the entire Sheas Cealer. Please believe me. This is not a game, and there are no new features here. Listen to me and use the normal functions. Please</value>
+    <value>No no no, don't click me. Sorry, I shouldn't have lied to you, I am a cursed button, and continuing to click me will bring disaster to the entire MistSail. Please believe me. This is not a game, and there are no new features here. Listen to me and use the normal functions. Please</value>
   </data>
   <data name="_GameEndingMsg" xml:space="preserve">
-    <value>You defeated the evil button and saved Sheas Cealer. You are the HERO!</value>
+    <value>You defeated the evil button and saved MistSail. You are the HERO!</value>
   </data>
   <data name="_GameGradeMsg" xml:space="preserve">
     <value>Button Remaining HP.</value>
   </data>
   <data name="_GameReviewEndingMsg" xml:space="preserve">
-    <value>It's dead. You're the HERO of Sheas Cealer</value>
+    <value>It's dead. You're the HERO of MistSail</value>
   </data>
   <data name="_GameStartMsg" xml:space="preserve">
     <value>No, please kill me. I... can't control it...</value>
@@ -379,7 +379,7 @@
     <value>Reopen as administrator</value>
   </data>
   <data name="_PowerNeedsAdminMsg" xml:space="preserve">
-    <value>Please reopen Sheas Cealer as administrator to use one-click connect.</value>
+    <value>Please reopen MistSail as administrator to use one-click connect.</value>
   </data>
   <data name="_ExitWhileConnectedPrompt" xml:space="preserve">
     <value>Still connected. Exiting will disconnect and restore hosts and certificates. Exit now?</value>

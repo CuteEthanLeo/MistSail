@@ -4,7 +4,7 @@ using System.IO;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 
-namespace Sheas_Cealer.Consts;
+namespace MistSail.Consts;
 
 internal abstract partial class MainConst : MainMultilangConst
 {
@@ -41,7 +41,7 @@ internal abstract partial class MainConst : MainMultilangConst
     internal static string MihomoConfPath => Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase!, "config.yaml");
     internal static string[] MihomoNameServers => ["https://doh.apad.pro/dns-query", "https://ns.net.kg/dns-query"];
 
-    internal static string NotifyIconText => "Sheas Cealer";
+    internal static string NotifyIconText => "MistSail";
 
     [GeneratedRegex(@"^(https?:\/\/)?[a-zA-Z0-9](-*[a-zA-Z0-9])*(\.[a-zA-Z0-9](-*[a-zA-Z0-9])*)*(:\d{1,5})?(\/[a-zA-Z0-9.\-_\~\!\$\&\'\(\)\*\+\,\;\=\:\@\%]*)*$")]
     internal static partial Regex UpstreamUrlRegex();

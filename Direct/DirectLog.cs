@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Sheas_Cealer.Direct;
+namespace MistSail.Direct;
 
 internal static class DirectLog
 {

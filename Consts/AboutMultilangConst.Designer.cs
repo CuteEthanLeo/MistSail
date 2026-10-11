@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Sheas_Cealer.Consts {
+namespace MistSail.Consts {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Sheas_Cealer.Consts {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Sheas_Cealer.Consts.AboutMultilangConst", typeof(AboutMultilangConst).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MistSail.Consts.AboutMultilangConst", typeof(AboutMultilangConst).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -79,7 +79,7 @@ namespace Sheas_Cealer.Consts {
         }
         
         /// <summary>
-        ///   查找类似 Dev. Space Time 的本地化字符串。
+        ///   查找类似 Dev. CuteEthanLeo 的本地化字符串。
         /// </summary>
         public static string DeveloperButtonContent {
             get {

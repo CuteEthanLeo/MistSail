@@ -1,13 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignThemes.Wpf;
-using Sheas_Cealer.Consts;
-using Sheas_Cealer.Props;
-using Sheas_Cealer.Utils;
+using MistSail.Consts;
+using MistSail.Props;
+using MistSail.Utils;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 
-namespace Sheas_Cealer.Preses;
+namespace MistSail.Preses;
 
 internal partial class GlobalPres : ObservableObject
 {

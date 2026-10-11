@@ -1,14 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Win32;
-using Sheas_Cealer.Consts;
-using Sheas_Cealer.Props;
+using MistSail.Consts;
+using MistSail.Props;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using File = System.IO.File;
 
-namespace Sheas_Cealer.Preses;
+namespace MistSail.Preses;
 
 internal partial class MainPres : GlobalPres
 {

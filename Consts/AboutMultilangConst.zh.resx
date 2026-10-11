@@ -101,13 +101,13 @@
     <value>使用协议</value>
   </data>
   <data name="DeveloperButtonContent" xml:space="preserve">
-    <value>开发者: Space Time</value>
+    <value>开发者: CuteEthanLeo</value>
   </data>
   <data name="DocumentationButtonContent" xml:space="preserve">
     <value>使用文档</value>
   </data>
   <data name="EmailButtonContent" xml:space="preserve">
-    <value>联系邮箱</value>
+    <value>问题反馈</value>
   </data>
   <data name="PolicyButtonContent" xml:space="preserve">
     <value>隐私政策</value>

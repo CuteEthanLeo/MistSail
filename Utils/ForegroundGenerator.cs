@@ -1,8 +1,8 @@
-﻿using Sheas_Cealer.Consts;
+﻿using MistSail.Consts;
 using System;
 using System.Windows.Media;
 
-namespace Sheas_Cealer.Utils;
+namespace MistSail.Utils;
 
 internal static class ForegroundGenerator
 {

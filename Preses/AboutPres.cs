@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Sheas_Cealer.Preses;
+namespace MistSail.Preses;
 
 internal partial class AboutPres : GlobalPres
 {
     [ObservableProperty]
-    private bool isSheasCealerUtd = true;
+    private bool isMistSailUtd = true;
 }

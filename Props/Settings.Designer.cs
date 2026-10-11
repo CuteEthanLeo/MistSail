@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Sheas_Cealer.Props {
+namespace MistSail.Props {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

@@ -10,7 +10,7 @@ using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sheas_Cealer.Direct;
+namespace MistSail.Direct;
 
 // Real TLS handshakes against the X edge IPs, paired with control handshakes to the same IPs
 // using an unrelated, unblocked SNI. The pattern tells IP-level blocking apart from SNI

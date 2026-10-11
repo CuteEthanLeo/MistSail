@@ -1,10 +1,10 @@
 ﻿using MaterialDesignThemes.Wpf;
-using Sheas_Cealer.Preses;
+using MistSail.Preses;
 using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace Sheas_Cealer.Convs;
+namespace MistSail.Convs;
 
 internal class MainSiteCheckIconConv : IValueConverter
 {

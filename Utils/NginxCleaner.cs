@@ -1,11 +1,11 @@
-﻿using Sheas_Cealer.Consts;
+﻿using MistSail.Consts;
 using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sheas_Cealer.Utils;
+namespace MistSail.Utils;
 
 internal static class NginxCleaner
 {

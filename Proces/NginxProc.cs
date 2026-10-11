@@ -1,9 +1,9 @@
-﻿using Sheas_Cealer.Consts;
-using Sheas_Cealer.Utils;
+﻿using MistSail.Consts;
+using MistSail.Utils;
 using Sheas_Core;
 using System;
 
-namespace Sheas_Cealer.Proces;
+namespace MistSail.Proces;
 
 internal class NginxProc : Proc
 {

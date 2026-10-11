@@ -8,9 +8,9 @@ $taskRoot = $PSScriptRoot
 $taskArtifacts = Join-Path $taskRoot 'artifacts'
 $taskBuildId = Get-Date -Format 'yyyyMMdd-HHmmss'
 $taskStage = Join-Path $taskArtifacts "stage\$taskBuildId"
-$taskOutput = Join-Path $taskStage 'Sheas-Cealer-Direct4-win-x64'
+$taskOutput = Join-Path $taskStage 'MistSail-win-x64'
 $taskUpstream = Join-Path $taskRoot 'vendor\upstream-1.1.4'
-$taskArchive = Join-Path $taskArtifacts "Sheas-Cealer-Direct4-win-x64-$taskBuildId.zip"
+$taskArchive = Join-Path $taskArtifacts "MistSail-v1.1.4.4-win-x64-$taskBuildId.zip"
 
 if (!(Test-Path -LiteralPath (Join-Path $taskUpstream 'Cealing-Nginx.exe'))) {
     throw '缺少 vendor/upstream-1.1.4，请先解压官方 1.1.4 免安装发行包到该目录。'
@@ -38,7 +38,7 @@ try {
     $null = Get-Content -LiteralPath (Join-Path $taskRoot 'vendor\Cealing-Host-U.json') -Raw | ConvertFrom-Json
 
     New-Item -ItemType Directory -Path $taskOutput -Force | Out-Null
-    & dotnet publish '.\Sheas-Cealer.csproj' -c Release -r win-x64 --self-contained true `
+    & dotnet publish '.\MistSail.csproj' -c Release -r win-x64 --self-contained true `
         -p:PublishSingleFile=false -p:PublishReadyToRun=false -o $taskOutput --verbosity minimal
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish 失败：$LASTEXITCODE" }
 }
@@ -47,24 +47,24 @@ finally { Pop-Location }
 foreach ($taskEngine in @('Cealing-Nginx.exe', 'Cealing-Mihomo.exe')) {
     Copy-Item -LiteralPath (Join-Path $taskUpstream $taskEngine) -Destination $taskOutput
 }
-foreach ($taskDocument in @('README.md', 'README_EN.md', 'README_DIRECT.md', 'README_X_RELAY.md', 'direct-config.json')) {
+foreach ($taskDocument in @('README.md', 'README_DIRECT.md', 'README_X_RELAY.md', 'direct-config.json')) {
     Copy-Item -LiteralPath (Join-Path $taskRoot $taskDocument) -Destination $taskOutput
 }
 Copy-Item -LiteralPath (Join-Path $taskRoot 'vendor\Cealing-Host-U.json') -Destination $taskOutput
 Set-Content -LiteralPath (Join-Path $taskOutput 'Cealing-Host-L.json') -Value '[]' -Encoding utf8
 Set-Content -LiteralPath (Join-Path $taskOutput 'nginx.conf') -Value '' -NoNewline -Encoding utf8
 Set-Content -LiteralPath (Join-Path $taskOutput 'config.yaml') -Value '' -NoNewline -Encoding utf8
-Remove-Item -LiteralPath (Join-Path $taskOutput 'Sheas_Cealer.pdb') -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath (Join-Path $taskOutput 'MistSail.pdb') -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath (Join-Path $taskOutput 'RelayCheck.exe') -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath (Join-Path $taskOutput 'RelayCheck.dll') -ErrorAction SilentlyContinue
 
 $taskQuickStart = @'
-Sheas Cealer Direct.4 —— 一键连接 + X 分片直连 + 线路诊断。X 连不上时会自动做对照握手，把“诊断”那行和复制的诊断信息发回来。
+雾帆 MistSail 1.1.4.4 —— 一键连接 + X 分片直连 + 线路诊断。X 连不上时会自动做对照握手，把“诊断”那行和复制的诊断信息发回来。
 
 1. 将压缩包完整解压到一个新目录，不要覆盖正在运行的旧版。
 2. 在旧版里先停止“全局伪造 / 全局净化”，再退出旧程序。
 3. 关闭 Clash Verge 等梯子（包括 TUN 和系统代理）。
-4. 右键 Sheas_Cealer.exe，以管理员身份运行；或直接打开后点“以管理员身份重新打开”。
+4. 右键 MistSail.exe，以管理员身份运行；或直接打开后点“以管理员身份重新打开”。
 5. 点击中间的大圆按钮。变绿后下方“连通性”卡片会自动检测 YouTube、X、GitHub。
 6. 新开标签访问 https://x.com，检查页面、登录、图片和视频。
 7. 不行就点“复制诊断信息”，把内容和 logs/relay.log、logs/error.log、截图一起发回来。

@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace Sheas_Cealer.Convs;
+namespace MistSail.Convs;
 
 internal class AboutAccentButtonForegroundConv : IValueConverter
 {

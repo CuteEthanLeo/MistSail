@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Sheas_Cealer.Consts {
+namespace MistSail.Consts {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Sheas_Cealer.Consts {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Sheas_Cealer.Consts.MainMultilangConst", typeof(MainMultilangConst).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MistSail.Consts.MainMultilangConst", typeof(MainMultilangConst).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -97,7 +97,7 @@ namespace Sheas_Cealer.Consts {
         }
         
         /// <summary>
-        ///   查找类似 No no no, don&apos;t click me. Sorry, I shouldn&apos;t have lied to you, I am a cursed button, and continuing to click me will bring disaster to the entire Sheas Cealer. Please believe me. This is not a game, and there are no new features here. Listen to me and use the normal functions. Please 的本地化字符串。
+        ///   查找类似 No no no, don&apos;t click me. Sorry, I shouldn&apos;t have lied to you, I am a cursed button, and continuing to click me will bring disaster to the entire MistSail. Please believe me. This is not a game, and there are no new features here. Listen to me and use the normal functions. Please 的本地化字符串。
         /// </summary>
         public static string _GameClickTwiceMsg {
             get {
@@ -106,7 +106,7 @@ namespace Sheas_Cealer.Consts {
         }
         
         /// <summary>
-        ///   查找类似 You defeated the evil button and saved Sheas Cealer. You are the HERO! 的本地化字符串。
+        ///   查找类似 You defeated the evil button and saved MistSail. You are the HERO! 的本地化字符串。
         /// </summary>
         public static string _GameEndingMsg {
             get {
@@ -124,7 +124,7 @@ namespace Sheas_Cealer.Consts {
         }
         
         /// <summary>
-        ///   查找类似 It&apos;s dead. You&apos;re the HERO of Sheas Cealer 的本地化字符串。
+        ///   查找类似 It&apos;s dead. You&apos;re the HERO of MistSail 的本地化字符串。
         /// </summary>
         public static string _GameReviewEndingMsg {
             get {
@@ -844,7 +844,7 @@ namespace Sheas_Cealer.Consts {
         }
         
         /// <summary>
-        ///   查找类似 Please reopen Sheas Cealer as administrator to use one-click connect. 的本地化字符串。
+        ///   查找类似 Please reopen MistSail as administrator to use one-click connect. 的本地化字符串。
         /// </summary>
         public static string _PowerNeedsAdminMsg {
             get {

@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Interop;
 
-namespace Sheas_Cealer.Utils;
+namespace MistSail.Utils;
 
 internal static partial class IconRemover
 {

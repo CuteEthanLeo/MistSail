@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sheas_Cealer.Direct;
+namespace MistSail.Direct;
 
 // Loopback TLS pass-through for the hosts that the hosts file points at RelayListenAddress.
 // The browser keeps end-to-end TLS with the real server (real certificate, its own fingerprint,

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sheas_Cealer.Direct;
+namespace MistSail.Direct;
 
 // A loopback HTTP CONNECT transport, with direct TCP egress. No remote proxy,
 // TLS interception, certificate installation, system proxy changes or TUN route.

@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using Sheas_Cealer.Consts;
+using MistSail.Consts;
 
-namespace Sheas_Cealer.Preses;
+namespace MistSail.Preses;
 
 internal enum SiteCheckState
 { Pending, Checking, Ok, Fail }

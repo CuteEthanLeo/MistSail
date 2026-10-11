@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Sheas_Cealer.Props;
+using MistSail.Props;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 
-namespace Sheas_Cealer.Preses;
+namespace MistSail.Preses;
 
 internal partial class SettingsPres : GlobalPres
 {

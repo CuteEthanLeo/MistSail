@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sheas_Cealer.Direct;
+namespace MistSail.Direct;
 
 // Splits only the first ClientHello, at the SNI name. Application data is untouched.
 // tls-record mode preserves the handshake bytes but changes their record boundaries.

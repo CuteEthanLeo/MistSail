@@ -1,3 +1,3 @@
-﻿namespace Sheas_Cealer.Consts;
+﻿namespace MistSail.Consts;
 
 internal abstract class SettingsConst : SettingsMultilangConst;

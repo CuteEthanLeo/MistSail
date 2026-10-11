@@ -72,7 +72,7 @@
 
 ```powershell
 dotnet run --project .\Verification\RelayCheck -- . 
-dotnet build .\Sheas-Cealer.sln -c Release
+dotnet build .\MistSail.sln -c Release
 .\Build-Package.ps1
 ```
 

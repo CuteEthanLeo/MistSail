@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace Sheas_Cealer.Convs;
+namespace MistSail.Convs;
 
 internal class MainWinWidthConv : IValueConverter
 {

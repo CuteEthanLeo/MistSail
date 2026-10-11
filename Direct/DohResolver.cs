@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sheas_Cealer.Direct;
+namespace MistSail.Direct;
 
 internal sealed class DohResolver : IDisposable
 {

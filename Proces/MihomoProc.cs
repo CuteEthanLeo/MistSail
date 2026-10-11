@@ -1,7 +1,7 @@
-﻿using Sheas_Cealer.Consts;
+﻿using MistSail.Consts;
 using Sheas_Core;
 
-namespace Sheas_Cealer.Proces;
+namespace MistSail.Proces;
 
 internal class MihomoProc : Proc
 {

@@ -1,15 +1,15 @@
 ﻿using MaterialDesignThemes.Wpf;
-using Sheas_Cealer.Preses;
-using Sheas_Cealer.Props;
-using Sheas_Cealer.Utils;
-using Sheas_Cealer.Wins;
+using MistSail.Preses;
+using MistSail.Props;
+using MistSail.Utils;
+using MistSail.Wins;
 using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace Sheas_Cealer;
+namespace MistSail;
 
 public partial class App : Application
 {

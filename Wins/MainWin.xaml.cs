@@ -2,11 +2,11 @@
 using Microsoft.Win32;
 using NginxConfigParser;
 using Ona_Core;
-using Sheas_Cealer.Consts;
-using Sheas_Cealer.Direct;
-using Sheas_Cealer.Preses;
-using Sheas_Cealer.Proces;
-using Sheas_Cealer.Utils;
+using MistSail.Consts;
+using MistSail.Direct;
+using MistSail.Preses;
+using MistSail.Proces;
+using MistSail.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,7 +33,7 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using File = System.IO.File;
 
-namespace Sheas_Cealer.Wins;
+namespace MistSail.Wins;
 
 public partial class MainWin : Window
 {
@@ -711,7 +711,7 @@ public partial class MainWin : Window
             DirectTransport.Start();
             string browserName = Path.GetFileNameWithoutExtension(MainPres.BrowserPath);
             string profile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Sheas-Cealer-Direct", "BrowserProfiles", $"{browserName}-{DirectTransport.Port}");
+                "MistSail", "BrowserProfiles", $"{browserName}-{DirectTransport.Port}");
             Directory.CreateDirectory(profile);
             ProcessStartInfo start = new(MainPres.BrowserPath) { UseShellExecute = false };
             start.ArgumentList.Add($"--user-data-dir={profile}");
@@ -879,7 +879,7 @@ public partial class MainWin : Window
         try
         {
             using HttpRequestMessage request = new(HttpMethod.Get, check.Url);
-            request.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Sheas-Cealer-Check");
+            request.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MistSail-Check");
             using HttpResponseMessage response = await CheckClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             int statusCode = (int)response.StatusCode;
             bool isOk = statusCode < 400;
@@ -911,7 +911,7 @@ public partial class MainWin : Window
     private void CopyDiagnosticsButton_Click(object sender, RoutedEventArgs e)
     {
         StringBuilder text = new();
-        text.AppendLine($"Sheas Cealer {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion} · {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}");
+        text.AppendLine($"MistSail {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion} · {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}");
         text.AppendLine($"admin={MainConst.IsAdmin} nginx={MainPres.IsNginxRunning} relay={MainPres.IsRelayRunning} ports={NginxHttpPort}/{NginxHttpsPort} connectedAt={MainPres.ConnectedAt:HH:mm:ss}");
         text.AppendLine($"relay-status: {MainPres.RelayStatus}");
         foreach (SiteCheckItem check in MainPres.SiteChecks)

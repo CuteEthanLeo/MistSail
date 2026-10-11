@@ -1,9 +1,9 @@
-﻿using Sheas_Cealer.Consts;
+﻿using MistSail.Consts;
 using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace Sheas_Cealer.Convs;
+namespace MistSail.Convs;
 
 internal class MainStatusCaptionConv : IMultiValueConverter
 {

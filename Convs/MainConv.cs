@@ -1,4 +1,4 @@
-﻿namespace Sheas_Cealer.Convs;
+﻿namespace MistSail.Convs;
 
 internal static class MainConv
 {
