@@ -25,12 +25,15 @@ internal sealed class DirectRelay : IDisposable
     internal int Port { get; private set; }
     internal event Action<string>? Status;
 
-    internal DirectRelay(DirectOptions options)
+    // ephemeral: bind a free loopback port instead of ListenPort (the global-mode video proxy must
+    // not collide with the browser-direct instance). allowSystemDnsFallback: see DohResolver; only
+    // the video proxy opts in, so the browser-direct mode keeps its "DoH only" contract.
+    internal DirectRelay(DirectOptions options, bool ephemeral = false, bool allowSystemDnsFallback = false)
     {
         this.options = options;
-        listener = new TcpListener(IPAddress.Loopback, options.ListenPort);
+        listener = new TcpListener(IPAddress.Loopback, ephemeral ? 0 : options.ListenPort);
         slots = new SemaphoreSlim(options.MaxConnections);
-        resolver = new DohResolver(options, stop.Token);
+        resolver = new DohResolver(options, stop.Token, allowSystemDnsFallback);
     }
 
     internal void Start()
@@ -38,7 +41,7 @@ internal sealed class DirectRelay : IDisposable
         listener.Start();
         Port = ((IPEndPoint)listener.LocalEndpoint).Port;
         _ = AcceptLoopAsync();
-        Report($"本机转发器 127.0.0.1:{Port} 已启动，出口为本机网络；握手模式 {options.FragmentMode}");
+        Report($"本机转发器 127.0.0.1:{Port} 已启动，出口为本机网络；握手策略 {options.StrategyFor("*")?.Name ?? "plain"}");
     }
 
     private async Task AcceptLoopAsync()
@@ -110,7 +113,7 @@ internal sealed class DirectRelay : IDisposable
             // Allow long video streams. Cancellation of the relay closes both directions.
             deadline.CancelAfter(Timeout.InfiniteTimeSpan);
             using var session = CancellationTokenSource.CreateLinkedTokenSource(stop.Token);
-            using var fragmented = new FragmentingStream(outgoing, options, connect && options.ShouldFragment(host), leaveOpen: true);
+            using var fragmented = new FragmentingStream(outgoing, connect ? options.StrategyFor(host) : null, leaveOpen: true);
             var upload = UploadAsync(incoming, fragmented, remote, session.Token);
             var download = DownloadAsync(outgoing, incoming, host, session.Token);
             var firstDone = await Task.WhenAny(upload, download);

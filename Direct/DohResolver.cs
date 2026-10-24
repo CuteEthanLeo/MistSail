@@ -22,13 +22,18 @@ internal sealed class DohResolver : IDisposable
     private readonly DirectOptions options;
     private readonly CancellationToken lifetime;
     private readonly HttpClient[] clients;
+    private readonly bool allowSystemDnsFallback;
     private readonly ConcurrentDictionary<string, Answer> cache = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, Lazy<Task<Answer>>> inflight = new(StringComparer.OrdinalIgnoreCase);
 
-    internal DohResolver(DirectOptions options, CancellationToken lifetime)
+    // allowSystemDnsFallback is only for the loopback video proxy: if every DoH endpoint is blocked,
+    // using the system resolver for rr*.googlevideo.com is still better than failing the whole stream.
+    // The relay itself never falls back, so its anti-poisoning guarantees stay intact.
+    internal DohResolver(DirectOptions options, CancellationToken lifetime, bool allowSystemDnsFallback = false)
     {
         this.options = options;
         this.lifetime = lifetime;
+        this.allowSystemDnsFallback = allowSystemDnsFallback;
         clients = options.DohServers.Select(server =>
         {
             var handler = new SocketsHttpHandler
@@ -40,21 +45,24 @@ internal sealed class DohResolver : IDisposable
                 {
                     // Bootstrap without the machine's potentially poisoned DNS or system proxy.
                     var tcp = await ConnectAsync(server.BootstrapAddresses.Select(IPAddress.Parse).ToArray(), 443, options.ConnectTimeoutSeconds, token);
-                    return new FragmentingStream(tcp.GetStream(), options,
-                        options.ShouldFragment(new Uri(server.Url).Host));
+                    return new FragmentingStream(tcp.GetStream(), options.StrategyFor(new Uri(server.Url).Host));
                 }
             };
             return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(options.DnsTimeoutSeconds) };
         }).ToArray();
     }
 
-    internal async Task<IPAddress[]> ResolveAsync(string host, CancellationToken token)
+    internal async Task<IPAddress[]> ResolveAsync(string host, CancellationToken token, bool force = false)
     {
         if (IPAddress.TryParse(host, out var literal))
             return [literal];
         host = new IdnMapping().GetAscii(host.TrimEnd('.')).ToLowerInvariant();
         if (options.HostOverrides.TryGetValue(host, out var configured))
             return configured.Select(IPAddress.Parse).ToArray();
+        // force is used by the candidate-refresh path after every configured IP has failed; it must
+        // not wait for the 1-600 s TTL of a previous answer.
+        if (force)
+            cache.TryRemove(host, out _);
         if (cache.TryGetValue(host, out var cached) && cached.Expires > DateTimeOffset.UtcNow)
             return cached.Addresses;
         var lazy = inflight.GetOrAdd(host, key => new Lazy<Task<Answer>>(() => QueryHostAsync(key), LazyThreadSafetyMode.ExecutionAndPublication));
@@ -70,9 +78,31 @@ internal sealed class DohResolver : IDisposable
         var ipv6 = options.EnableIPv6 ? QueryTypeOrEmptyAsync(host, 28) : Task.FromResult((Array.Empty<IPAddress>(), 300u));
         var results = await Task.WhenAll(ipv4, ipv6);
         var addresses = results.SelectMany(r => r.Item1).Distinct().ToArray();
+        uint ttl = results.Any(r => r.Item1.Length > 0) ? results.Where(r => r.Item1.Length > 0).Min(r => r.Item2) : 30u;
+        if (addresses.Length == 0 && allowSystemDnsFallback)
+        {
+            try
+            {
+                IPAddress[] system = await Dns.GetHostAddressesAsync(host, lifetime);
+                // A hosts-file entry could resolve to loopback; feeding that back would redirect the
+                // proxy to itself, so only real addresses are usable here.
+                IPAddress[] usable = system.Where(ip => !IPAddress.IsLoopback(ip)).Distinct().ToArray();
+                if (usable.Length > 0)
+                {
+                    DirectLog.Write($"DoH 未取得 {host}，视频转发器回退系统 DNS：{string.Join(",", usable.Select(ip => ip.ToString()))}");
+                    var fallback = new Answer(usable, DateTimeOffset.UtcNow.AddSeconds(60));
+                    if (cache.Count > 4096) cache.Clear();
+                    cache[host] = fallback;
+                    return fallback;
+                }
+            }
+            catch (Exception ex) when (ex is SocketException or IOException or ArgumentException)
+            {
+                DirectLog.Write($"系统 DNS 回退失败 {host}：{ex.Message}");
+            }
+        }
         if (addresses.Length == 0)
             throw new IOException($"DoH 未取得 {host} 的可用地址；未回退到系统 DNS。");
-        uint ttl = results.Where(r => r.Item1.Length > 0).Min(r => r.Item2);
         var answer = new Answer(addresses, DateTimeOffset.UtcNow.AddSeconds(Math.Clamp(ttl, 1u, 600u)));
         if (cache.Count > 4096) cache.Clear();
         cache[host] = answer;

@@ -12,6 +12,7 @@ HTTPS 加密了网页内容，但 TLS 握手第一个数据包 ClientHello 里�
 |---|---|---|
 | 本机 nginx 改写 SNI | 常规站点 | hosts 把域名指向 `127.0.0.1`，本机 nginx 用自签证书接管浏览器连接，再以改写后的 SNI 连向真实服务器 |
 | 回环中继分片 | 拒绝改写 SNI 的 Cloudflare 类站点 | hosts 把域名指向 `127.0.0.2`，进程内 `SniRelay` 把首个 ClientHello 按 TLS record 切片后透传，浏览器与真实服务器仍是端到端 TLS |
+| 本机 PAC + CONNECT 转发器 | hosts 无法通配的动态视频域名（如 YouTube 的 `rr*.googlevideo.com`） | 连接期间系统自动配置脚本只把这些后缀交给 `127.0.0.1` 的回环转发器，经 DoH 解析与 ClientHello 分片后直连；断开/退出时恢复原系统代理设置 |
 
 主界面只有一个电源按钮，旧功能收进「更多功能」；连通性卡片、线路探测与「复制诊断信息」用于排查。
 
@@ -45,39 +46,50 @@ HTTPS 加密了网页内容，但 TLS 握手第一个数据包 ClientHello 里�
 
 | 键 | 默认 | 说明 |
 |---|---|---|
-| `FragmentMode` | `tls-record` | 分片方式；`tcp` 为 TCP 写入分片；`off` 关闭 |
+| `FragmentMode` | `auto` | 分片方式；由线路诊断决定，也可填具体策略或旧值 `tcp` / `off` |
 | `FragmentBytes` | 8 | 域名区域的分片字节数，域名总会被从中间切开 |
-| `FragmentDelayMs` | 8 | 片与片之间的发送间隔 |
+| `FragmentDelayMs` | 15 | 片与片之间的发送间隔 |
+| `HandshakeTimeoutSeconds` | 4 | 单个候选 IP 发出 ClientHello 后的等待上限 |
 | `RelayListenAddress` | `127.0.0.2` | 分片中继监听的回环地址 |
-| `RelayHosts` | … | 走分片中继的域名与候选 IP |
+| `RelayHosts` | … | 走分片中继的域名与候选 IP；为空数组时用 DoH 解析 |
+| `RefreshCandidatesFromDoh` | `true` | 候选 IP 全部失败后是否用 DoH 刷新该域名的候选 |
 | `DohServers` | Cloudflare / Quad9 / Google | 加密 DNS，带引导 IP |
+| `DesyncMode` | `auto` | 内核级 WinDivert 假包；`off` 关闭、不加载驱动 |
+| `DynamicProxyEnabled` | `true` | 全局模式是否启用动态视频 PAC + 本机 CONNECT 转发器 |
+| `DynamicProxyHosts` | `["googlevideo.com","youtubei.googleapis.com"]` | 只把这些后缀交给本机转发器；写域名即可，自动匹配子域 |
+| `DynamicProxyOverrideExisting` | `false` | 检测到已有公司 PAC / 固定代理时是否覆盖（默认不破坏原设置） |
 
 修改后停止并重新连接生效。更多说明见 [README_DIRECT.md](README_DIRECT.md) 与 [README_X_RELAY.md](README_X_RELAY.md)。
 
 ## 日志与诊断
 
-- `logs/relay.log`：分片中继的每条连接结果（目标 IP、握手阶段、错误形态），不记录 URL、Cookie 或请求头。
-- `logs/direct.log`：实验性浏览器直连模式的日志。
-- 主界面「复制诊断信息」会把连通性结果与线路对照结论一起复制到剪贴板。
+- `logs/relay.log`：分片中继的每条连接结果（目标 IP、握手阶段、错误形态）、候选 IP 刷新、`[video]` 视频转发器/PAC 状态；不记录 URL、Cookie 或请求头。
+- `logs/direct.log`：实验性浏览器直连模式与视频转发器的连接日志。
+- 主界面「复制诊断信息」会把连通性结果、线路对照结论、PAC 端口/域名与系统 `AutoConfigURL` 一起复制到剪贴板。
 
 ## 能力边界
 
 加密 DNS 与握手处理只能改善 DNS 污染和部分握手识别导致的问题，**不改变路由，不能保证突破目标 IP 封锁、全部协议识别或站点自身的地区/账户限制**。这是客户端方案的边界。
+
+动态视频 PAC 只影响读取 Windows 自动配置脚本的程序（Chrome/Edge 等）；Firefox 使用自带代理设置，需要改用“浏览器直连（实验）”模式。若线路已经能重组 TLS record/TCP 分段，视频路径仍会失败，诊断会明确说明。
 
 ## 注意事项与免责声明
 
 1. 本项目及所有相关资源仅供**抵御网络非法监听**和**开展网络安全研究**使用，无意绕过任何国家审查设备的审查。
 2. 使用前请阅读上游项目的[隐私政策](https://thoughts.teambition.com/share/6264eda98adeb10041b92fda#title=Sheas_Cealer_隐私政策)与[使用协议](https://thoughts.teambition.com/share/6264edd78adeb10041b92fdb#title=Sheas_Cealer_使用协议)，并遵守所在地法律法规。
 3. 本改版处于实验阶段，不保证任何站点可用；请勿与其他代理、VPN 或 TUN 软件同时使用。
+4. 全局模式连接期间会临时设置当前用户的 `AutoConfigURL` 指向本机 PAC，断开或退出时自动恢复；若程序被强杀，重新打开 MistSail 或运行 `Repair-Remnants.ps1` 即可恢复。检测到已有公司 PAC / 固定代理时默认不覆盖。
 
 ## 目录说明
 
 | 路径 | 内容 |
 |---|---|
-| `Direct/` | 本改版新增：`SniRelay`、`FragmentingStream`、`DohResolver`、`DirectRelay`、`LineProbe` |
+| `Direct/` | 本改版新增：`SniRelay`、`FragmentingStream`、`DohResolver`、`DirectRelay`、`LineProbe`、`PacServer` |
+| `Utils/SystemProxy.cs` | 本机 PAC 的系统代理设置与恢复 |
 | `Wins/` `Consts/` `Convs/` `Preses/` `Proces/` `Utils/` `Props/` | 上游 WPF 源码及本改版的界面修改 |
 | `Verification/RelayCheck/` | 离线自检程序 |
-| `vendor/Cealing-Host-U.json` | 上游规则快照（文本） |
+| `Cealing-Host-L.json` | 本地补充规则（含 `google.com.hk`），与上游快照分离 |
+| `vendor/Cealing-Host-U.json` | 上游规则快照（文本，哈希保护） |
 | `docs/upstream/` | 上游项目原始 README |
 | `docs/video/` | 项目介绍视频的离线渲染脚本（Pillow + numpy + ffmpeg） |
 

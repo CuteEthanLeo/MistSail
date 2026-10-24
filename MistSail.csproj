@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Title>MistSail</Title>
@@ -8,10 +8,10 @@
     <PackageReleaseNotes>雾帆 MistSail</PackageReleaseNotes>
     <Authors>CuteEthanLeo</Authors>
     <Company>CuteEthanLeo</Company>
-    <AssemblyVersion>1.1.4.4</AssemblyVersion>
-    <Version>1.1.4-direct.4</Version>
-    <FileVersion>1.1.4.4</FileVersion>
-    <InformationalVersion>1.1.4-direct.4-x-relay-probe</InformationalVersion>
+    <AssemblyVersion>1.1.4.7</AssemblyVersion>
+    <Version>1.1.4-direct.8</Version>
+    <FileVersion>1.1.4.7</FileVersion>
+    <InformationalVersion>1.1.4-direct.8-crash-fix</InformationalVersion>
     <PackageTags>Tool;MistSail;Sni</PackageTags>
     <ApplicationIcon>MistSail-Logo.ico</ApplicationIcon>
     <PackageIcon>MistSail-Logo.ico</PackageIcon>
@@ -65,12 +65,25 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Local supplement rules (google.com.hk) next to the exe for developer runs; the release
+         package also copies this file explicitly. -->
+    <None Update="Cealing-Host-L.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove=".filenesting.json" />
     <None Remove=".gitattributes" />
     <None Remove=".gitignore" />
     <None Remove="README.md" />
     <None Remove="README_EN.md" />
     <None Remove="MistSail-Logo.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WinDivert 2.2.2 (vendor/windivert, LGPLv3) for the kernel-level desync layer. Copied next to
+         the exe so WinDivert.dll loads and finds WinDivert64.sys in the same directory. x64 only. -->
+    <None Include="vendor\windivert\WinDivert.dll" Link="WinDivert.dll" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <None Include="vendor\windivert\WinDivert64.sys" Link="WinDivert64.sys" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>

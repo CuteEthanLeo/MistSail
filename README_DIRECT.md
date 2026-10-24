@@ -41,13 +41,15 @@
 
 点击“直连配置”编辑 `direct-config.json`。编辑后停止并重新启动直连，使新配置生效。
 
-- `FragmentMode`：默认 `tls-record`；兼容性问题可以改成 `tcp`；`off` 只做加密 DNS 和真实 TCP 直连。
-- `FragmentBytes`：默认 8，范围 1～1024；`FragmentDelayMs`：默认 8，范围 0～100。分段只给握手增加延迟，后续视频数据连续转发。
+- `FragmentMode`：默认 `auto`（由线路诊断决定；旧值 `tls-record` / `tcp` / `off` 仍可解析）；兼容性问题可以固定成 `tcp`；`off` 只做加密 DNS 和真实 TCP 直连。
+- `FragmentBytes`：默认 8，范围 1～1024；`FragmentDelayMs`：默认 15，范围 0～2000。分段只给握手增加延迟，后续视频数据连续转发。
 - `FragmentDomains`：默认 `["*"]`，尝试处理全部 TLS 域名；也可限定 `youtube.com`、`googlevideo.com`、`x.com`、`twimg.com`、`github.com`、`githubusercontent.com`、`githubassets.com` 及三个 DoH 服务域名。
-- `EnableIPv6`：默认关闭；只有确认本机 IPv6 网络可用时再开启。本次没有检查 IPv6。
+- `EnableIPv6`：默认开启，但只有本机存在公网 IPv6 时才使用 AAAA 候选；没有 IPv6 时自动只用 IPv4。
 - `HostOverrides`：可以为**确切域名**指定经过你验证的真实 IP 数组。默认留空，不臆造可用地址，不改变证书校验。
 - `DohServers`：默认 Cloudflare、Quad9、Google。配置各项均使用 HTTPS 443 及显式引导 IP；部分大陆网络可能封锁这些 IP，届时会解析失败。DoH 服务提供方可以看到你的 DNS 查询。
-- `ListenPort`：默认 17881。如果本机端口已占用，启动会报错；可修改此值。不同端口使用不同独立浏览器资料目录。
+- `RefreshCandidatesFromDoh`：默认开启；全局中继在候选全部失败后用 DoH 刷新该域名的候选，不影响直连模式的 DoH 语义。
+- `DynamicProxyEnabled` / `DynamicProxyHosts` / `DynamicProxyOverrideExisting`：全局模式的动态视频 PAC。直连模式不使用 PAC；两者不要同时运行。
+- `ListenPort`：默认 17881，仅“浏览器直连”使用。全局模式的视频转发器改用临时端口，不会与它冲突。不同端口使用不同独立浏览器资料目录。
 
 失败时请提供包内 `logs/direct.log` 及浏览器报错截图。日志记录目标域名、目标 IP、连接和错误阶段，**不记录完整 URL、Cookie、请求头或视频内容**；它仍然包含浏览域名。2 MB 后轮转为 `direct.log.previous`。
 

@@ -1,4 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using NginxConfigParser;
 using Ona_Core;
@@ -47,14 +47,21 @@ public partial class MainWin : Window
     private readonly SemaphoreSlim IsNginxLaunchingSemaphore = new(1);
     private readonly SemaphoreSlim RuleLoadingSemaphore = new(1);
     private DirectRelay? DirectTransport;
+    private DirectRelay? VideoProxy;
+    private PacServer? VideoPac;
+    private DateTime LastAutoProbe = DateTime.MinValue;
     private bool DirectStarting;
     private bool WindowClosing;
     private bool IsExiting;
+    // nginx 连续多少次巡检都不在，用于把"真的没了"和启动/停止的瞬时状态分开。
+    private int NginxMissingTicks;
     private SniRelay? Relay;
+    private WinDivertDesync? Desync;
+    private string? DesyncError; // why the kernel engine is not running, for the verdict and diagnostics
     private DirectOptions? RelayOptions;
     private readonly SemaphoreSlim SiteCheckSemaphore = new(1);
     private readonly SemaphoreSlim LineProbeSemaphore = new(1);
-    private List<LineProbe.Outcome> LineProbeOutcomes = [];
+    private LineProbe.Report? LineReport;
     // Connectivity checks must follow the hosts file like a browser would: no system proxy, any certificate.
     private readonly HttpClient CheckClient = new(new SocketsHttpHandler
     {
@@ -63,7 +70,7 @@ public partial class MainWin : Window
         AllowAutoRedirect = false,
         ConnectTimeout = TimeSpan.FromSeconds(8),
         SslOptions = { RemoteCertificateValidationCallback = (_, _, _, _) => true }
-    }) { Timeout = TimeSpan.FromSeconds(12) };
+    }) { Timeout = TimeSpan.FromSeconds(25) };
 
     private SortedDictionary<string, List<(List<(string cealHostIncludeDomain, string cealHostExcludeDomain)> cealHostDomainPairs, string? cealHostSni, string cealHostIp)>?> CealHostRulesDict = [];
     private string CealArgs = string.Empty;
@@ -103,6 +110,17 @@ public partial class MainWin : Window
         await ReloadRulesAsync();
         MihomoConfWatcher_Changed(null!, null!);
 
+        // 上一次会话被强杀时，hosts 可能还写着本机回环地址而 nginx 已经不在了。此时命中的域名
+        // （X 以及规则表里的所有站点）都会连向没人监听的端口，开着代理也上不去，必须先清掉。
+        if (!MainPres.IsNginxRunning && (NginxCleaner.HasHostsResidue() || SystemProxy.HasResidue()))
+        {
+            // Clean() restores hosts, certificates and the per-user PAC URL. Only the hosts part
+            // needs administrator rights; SystemProxy works in the current user's registry.
+            await NginxCleaner.Clean();
+            if (NginxCleaner.HasHostsResidue() && !MainConst.IsAdmin)
+                MessageBox.Show(MainConst._HostsResidueNeedsAdminMsg);
+        }
+
         // Nginx left running by an earlier session: hosts still point X at the relay, so bring it back.
         if (MainConst.IsAdmin && MainPres.IsNginxRunning)
         {
@@ -123,34 +141,42 @@ public partial class MainWin : Window
         if (IsExiting)
             return;
 
-        if (MainPres.IsNginxRunning && !MainPres.IsNginxIniting)
+        if (MainPres.IsNginxRunning && !MainPres.IsNginxIniting &&
+            MessageBox.Show(MainConst._ExitWhileConnectedPrompt, string.Empty, MessageBoxButton.YesNo) != MessageBoxResult.Yes)
         {
-            if (MessageBox.Show(MainConst._ExitWhileConnectedPrompt, string.Empty, MessageBoxButton.YesNo) != MessageBoxResult.Yes)
-            {
-                e.Cancel = true;
-                return;
-            }
-
-            // Keep the window alive until hosts and certificates are restored, then close for real.
             e.Cancel = true;
-            IsExiting = true;
-            WindowClosing = true;
-            IsEnabled = false;
-            await StopGlobalAsync();
-            await FinishClosingAsync();
-            Application.Current.Shutdown();
             return;
         }
 
+        // Keep the window alive until hosts and certificates are restored, then close for real.
+        e.Cancel = true;
         IsExiting = true;
         WindowClosing = true;
-        await FinishClosingAsync();
+        IsEnabled = false;
+
+        // 无论清理成功与否都必须走到 Shutdown。旧实现里 StopGlobalAsync 一抛异常就会从
+        // async void 逃出去，而窗口已经"取消关闭 + 禁用"，于是程序留在内存里不响应——这就是"退不掉"。
+        try
+        {
+            if (MainPres.IsNginxRunning)
+                await StopGlobalAsync();
+        }
+        catch (Exception ex) { NginxCleaner.LogFailure("停止全局模式失败", ex); }
+
+        try { await FinishClosingAsync(); }
+        catch (Exception ex) { NginxCleaner.LogFailure("退出清理失败", ex); }
 
         Application.Current.Shutdown();
     }
     private async Task FinishClosingAsync()
     {
+        // 连接流程可能还在进行（hosts 刚写好、nginx 正在起）。先等它落地再清理，
+        // 否则它会在我们清完之后又把 hosts 区块写回去。
+        if (await IsNginxLaunchingSemaphore.WaitAsync(TimeSpan.FromSeconds(15)))
+            IsNginxLaunchingSemaphore.Release();
+
         StopDirectTransport();
+        StopVideoProxy();
         StopRelay();
         ProxyTimer.Stop();
         CealHostWatcher.EnableRaisingEvents = false;
@@ -158,6 +184,30 @@ public partial class MainWin : Window
         MihomoConfWatcher.EnableRaisingEvents = false;
         if (MainPres.IsMihomoIniting)
             await File.WriteAllTextAsync(MainConst.MihomoConfPath, ExtraMihomoConfs);
+
+        // 不能只看 IsNginxRunning：nginx 被外部杀掉时它已经是 false，而 hosts 区块还在。
+        // 清理是幂等的，漏清却会让整台机器上不了网，所以退出前一律清一遍。
+        await NginxCleaner.Clean();
+        if (await NginxCleaner.IsNginxCleaningSemaphore.WaitAsync(TimeSpan.FromSeconds(5)))
+            NginxCleaner.IsNginxCleaningSemaphore.Release();
+        MainPres.IsNginxRunning = false;
+    }
+
+    // hosts 末行没有换行时直接追加，新旧区块会粘成一行（旧的 "# Cealing Nginx End# Cealing Nginx Start"）。
+    private static bool HostsFileNeedsLeadingNewline()
+    {
+        try
+        {
+            using FileStream hostsStream = new(MainConst.HostsConfPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+            if (hostsStream.Length == 0)
+                return false;
+
+            hostsStream.Seek(-1, SeekOrigin.End);
+
+            return hostsStream.ReadByte() is not (10 or 13); // \n 或 \r
+        }
+        catch { return false; }
     }
 
     private void MainWin_DragEnter(object sender, DragEventArgs e)
@@ -362,9 +412,12 @@ public partial class MainWin : Window
                 await File.WriteAllTextAsync(MainConst.NginxCertPath, childCert.ExportCertificatePem());
                 await File.WriteAllTextAsync(MainConst.NginxKeyPath, certKey.ExportPkcs8PrivateKeyPem());
 
-                hostsConfAppendContent += MainConst.HostsConfEndMarker;
+                // 结束标记后必须补回换行，否则下一次连接追加的起始标记会粘在同一行。
+                hostsConfAppendContent += MainConst.HostsConfEndMarker + Environment.NewLine;
 
                 File.SetAttributes(MainConst.HostsConfPath, File.GetAttributes(MainConst.HostsConfPath) & ~FileAttributes.ReadOnly);
+                if (HostsFileNeedsLeadingNewline())
+                    hostsConfAppendContent = Environment.NewLine + hostsConfAppendContent;
                 await File.AppendAllTextAsync(MainConst.HostsConfPath, hostsConfAppendContent);
                 #endregion Child Cert & Hosts
 
@@ -428,7 +481,7 @@ public partial class MainWin : Window
         StopRelay();
         MainPres.ConnectedAt = null;
         MainPres.LineVerdict = string.Empty;
-        LineProbeOutcomes = [];
+        LineReport = null;
         foreach (SiteCheckItem check in MainPres.SiteChecks)
             check.Reset();
 
@@ -789,9 +842,15 @@ public partial class MainWin : Window
         StopRelay();
         try
         {
-            Relay = new SniRelay(options);
+            DirectState? state = DirectState.Load();
+            StartDesync(options, state);
+            // Only send plain ClientHellos when a desync strategy is actually armed (pinned or
+            // replayed from state); otherwise the relay keeps shaping in user space as before.
+            Relay = new SniRelay(options, state: state, forcePlain: Desync?.Armed is not null);
             Relay.Status += Relay_Status;
+            Relay.HostFailure += Relay_HostFailure;
             Relay.Start();
+            StartVideoProxy();
             MainPres.IsRelayRunning = true;
             MainPres.RelayStatus = string.Format(MainConst.RelayStatusRunning, Relay.EndPoint);
         }
@@ -800,6 +859,44 @@ public partial class MainWin : Window
             StopRelay();
             MainPres.RelayStatus = string.Format(MainConst.RelayStatusFailed, ex.Message);
             MessageBox.Show(string.Format(MainConst._RelayListenFailedMsg, $"{options.RelayListenAddress}:443", ex.Message));
+        }
+    }
+    // Brings up the WinDivert desync engine when DesyncMode is enabled. Failure (missing driver,
+    // not elevated) is non-fatal: the relay still runs in user-space mode, and the status says so.
+    private void StartDesync(DirectOptions options, DirectState? state)
+    {
+        DesyncError = null;
+        if (!options.DesyncEnabled)
+        {
+            DesyncError = "direct-config.json 的 DesyncMode 为 off";
+            return;
+        }
+        try
+        {
+            var engine = new WinDivertDesync(options.DesyncEdges());
+            engine.Status += Relay_Status;
+            engine.EngineFailed += () =>
+            {
+                if (!ReferenceEquals(Desync, engine)) return;
+                if (Relay is not null) Relay.ForcePlain = false;
+                DirectLog.Write(SniRelay.LogFile, "desync 接收线程异常停止：中继回退用户态分片，请断开重连。");
+            };
+            engine.Start();
+            // Pin from config, else replay the finder's last winner from state; else leave disarmed
+            // until the finder runs on the first X failure.
+            DesyncStrategy? pinned = options.ConfiguredDesync;
+            if (pinned is null && state?.Desync is { } saved && DesyncStrategy.TryParse(saved, out var learned))
+                pinned = learned;
+            if (pinned is not null)
+                engine.Arm(pinned);
+            Desync = engine;
+        }
+        catch (Exception ex) when (ex is DllNotFoundException or InvalidOperationException or ArgumentException)
+        {
+            Desync = null;
+            DesyncError = ex.Message;
+            DirectLog.Write(SniRelay.LogFile, $"desync 引擎未启动（继续用户态分片）：{ex.Message}");
+            MainPres.RelayStatus = string.Format(MainConst.RelayStatusFailed, ex.Message);
         }
     }
     private void Relay_Status(string text)
@@ -812,15 +909,100 @@ public partial class MainWin : Window
     }
     private void StopRelay()
     {
+        StopVideoProxy();
         if (Relay is not null)
         {
             Relay.Status -= Relay_Status;
+            Relay.HostFailure -= Relay_HostFailure;
             Relay.Dispose();
             Relay = null;
+        }
+        if (Desync is not null)
+        {
+            Desync.Status -= Relay_Status;
+            Desync.Dispose();
+            Desync = null;
         }
         MainPres.IsRelayRunning = false;
         MainPres.RelayStatus = MainConst.RelayStatusIdle;
     }
+
+    // Repeated X failures trigger one finder run in the background. The SiteCheck path already does
+    // this after its HTTP probe; this catches the user who opens the browser before that check ends.
+    private void Relay_HostFailure(string host, int attempts)
+    {
+        if (WindowClosing || Dispatcher.HasShutdownStarted || !MainPres.IsNginxRunning || Relay is null || RelayOptions is null)
+            return;
+        if (host is not ("x.com" or "www.x.com" or "twitter.com" or "www.twitter.com"))
+            return;
+        if (DateTime.UtcNow - LastAutoProbe < TimeSpan.FromMinutes(3))
+            return;
+        LastAutoProbe = DateTime.UtcNow;
+        Dispatcher.BeginInvoke(new Action(() => _ = RunLineProbeAsync()));
+    }
+
+    // Global mode also brings up the loopback CONNECT relay and a PAC script for the dynamic video
+    // hosts that the hosts file cannot wildcard. Optional and non-fatal: if it cannot start, the
+    // hosts + nginx path keeps working exactly as before.
+    private void StartVideoProxy()
+    {
+        if (RelayOptions is null || !RelayOptions.DynamicProxyEnabled || RelayOptions.DynamicProxyHosts.Length == 0)
+        {
+            DirectLog.Write(SniRelay.LogFile, "动态视频代理未启用（配置关闭或域名列表为空）");
+            return;
+        }
+        StopVideoProxy();
+        try
+        {
+            VideoProxy = new DirectRelay(RelayOptions, ephemeral: true, allowSystemDnsFallback: true);
+            VideoProxy.Status += VideoProxy_Status;
+            VideoProxy.Start();
+            VideoPac = new PacServer(RelayOptions.DynamicProxyHosts, VideoProxy.Port);
+            VideoPac.Status += VideoProxy_Status;
+            VideoPac.Start();
+            if (!SystemProxy.Enable(VideoPac.PacUrl, RelayOptions.DynamicProxyOverrideExisting, out string? reason))
+            {
+                DirectLog.Write(SniRelay.LogFile, $"动态视频 PAC 未启用：{reason}");
+                StopVideoProxy();
+                return;
+            }
+            DirectLog.Write(SniRelay.LogFile,
+                $"动态视频代理已启用：{VideoPac.PacUrl} -> 127.0.0.1:{VideoProxy.Port}；域名 {string.Join("、", RelayOptions.DynamicProxyHosts)}");
+        }
+        catch (Exception ex)
+        {
+            DirectLog.Write(SniRelay.LogFile, $"动态视频代理启动失败：{ex.GetType().Name} {ex.Message}");
+            StopVideoProxy();
+        }
+    }
+
+    private void StopVideoProxy()
+    {
+        // Restore first: a dead loopback PAC port must never outlive this process.
+        SystemProxy.Restore();
+        if (VideoPac is not null)
+        {
+            try
+            {
+                VideoPac.Status -= VideoProxy_Status;
+                VideoPac.Dispose();
+            }
+            catch (Exception ex) { DirectLog.Write(SniRelay.LogFile, $"停止 PAC 失败：{ex.GetType().Name}"); }
+            VideoPac = null;
+        }
+        if (VideoProxy is not null)
+        {
+            try
+            {
+                VideoProxy.Status -= VideoProxy_Status;
+                VideoProxy.Dispose();
+            }
+            catch (Exception ex) { DirectLog.Write(SniRelay.LogFile, $"停止视频转发器失败：{ex.GetType().Name}"); }
+            VideoProxy = null;
+        }
+    }
+
+    private void VideoProxy_Status(string text) => DirectLog.Write(SniRelay.LogFile, "[video] " + text);
 
     private async Task RunSiteChecksAsync()
     {
@@ -835,7 +1017,7 @@ public partial class MainWin : Window
         finally { SiteCheckSemaphore.Release(); }
 
         // X failed through the relay: run the control probes once so the log says why.
-        if (Relay is not null && MainPres.SiteChecks.Any(check => check.Host == "x.com" && check.State == SiteCheckState.Fail) && LineProbeOutcomes.Count == 0)
+        if (Relay is not null && MainPres.SiteChecks.Any(check => check.Host == "x.com" && check.State == SiteCheckState.Fail) && LineReport is null)
             await RunLineProbeAsync();
     }
     private async Task RunLineProbeAsync()
@@ -846,14 +1028,58 @@ public partial class MainWin : Window
         {
             MainPres.IsLineProbing = true;
             MainPres.LineVerdict = MainConst.LineProbeRunning;
+            LastAutoProbe = DateTime.UtcNow;
             DirectOptions options = RelayOptions;
-            using CancellationTokenSource cancel = new(TimeSpan.FromMinutes(3));
-            List<LineProbe.Outcome> outcomes = await Task.Run(() => LineProbe.RunAsync(options, LineProbe.DefaultSteps(options),
-                text => DirectLog.Write(SniRelay.LogFile, text), cancel.Token));
-            LineProbeOutcomes = outcomes;
-            MainPres.LineVerdict = string.Format(MainConst.LineProbeVerdict, LineProbe.Verdict(outcomes));
+            SniRelay? relay = Relay;
+            WinDivertDesync? desync = Desync;
+            string? desyncError = DesyncError;
+            using CancellationTokenSource cancel = new(TimeSpan.FromMinutes(8));
+            // Give the finder the current DoH view before probing: a pinned list can be stale for
+            // weeks while Cloudflare rotates the edges that serve the zone.
+            if (relay is not null)
+            {
+                try { await relay.RefreshCandidatesAsync(["x.com", "pbs.twimg.com"], cancel.Token); }
+                catch (Exception ex) when (ex is OperationCanceledException or IOException or SocketException)
+                {
+                    DirectLog.Write(SniRelay.LogFile, $"诊断前刷新候选失败：{ex.GetType().Name}");
+                }
+            }
+            LineProbe.Report report = await Task.Run(() => LineProbe.RunAsync(options,
+                host => relay is not null && relay.LastClientHelloByHost.TryGetValue(host, out byte[]? hello) ? hello : null,
+                text => DirectLog.Write(SniRelay.LogFile, text),
+                (ip, until) => relay?.MarkUnreachable(ip, until),
+                desync,
+                desyncError,
+                cancel.Token,
+                host => relay is not null ? relay.DynamicCandidatesFor(host) : Array.Empty<IPAddress>()));
+            LineReport = report;
+            MainPres.LineVerdict = string.Format(MainConst.LineProbeVerdict, report.Text);
+
+            // The relay may have been stopped or restarted while the finder ran: apply only to the same instance.
+            if (report.Valid && relay is not null && ReferenceEquals(relay, Relay) && !WindowClosing)
+            {
+                foreach (IPAddress ip in report.Good)
+                    relay.MarkGood(ip);
+                if (report.Winner is not null && !relay.IsPinnedByConfig)
+                {
+                    relay.ApplyStrategy(report.Winner);
+                    if (report.FastlyWinner is not null && report.FastlyWinner != report.Winner)
+                        foreach (string host in options.RelayHosts.Keys.Where(host => host.EndsWith("twimg.com", StringComparison.OrdinalIgnoreCase)))
+                            relay.ApplyStrategy(report.FastlyWinner, host);
+                }
+                // Kernel-level winner: arm the engine for every live connection and remember it.
+                if (report.DesyncWinner is not null && desync is not null && ReferenceEquals(desync, Desync) && options.ConfiguredDesync is null)
+                {
+                    desync.Arm(report.DesyncWinner);
+                    relay.DesyncName = report.DesyncWinner.Name;
+                    relay.ForcePlain = true; // the wire layer now frames the ClientHello
+                }
+                relay.Snapshot().Save();
+                if (report.Winner is not null || report.DesyncWinner is not null)
+                    _ = RunSiteChecksAsync();
+            }
         }
-        catch (Exception ex) when (ex is OperationCanceledException or IOException or SocketException)
+        catch (Exception ex) when (ex is OperationCanceledException or IOException or SocketException or ObjectDisposedException or InvalidOperationException)
         {
             MainPres.LineVerdict = string.Format(MainConst.LineProbeVerdict, ex.Message);
         }
@@ -870,7 +1096,7 @@ public partial class MainWin : Window
             MainPres.LineVerdict = MainConst.SiteCheckNotConnected;
             return;
         }
-        LineProbeOutcomes = [];
+        LineReport = null;
         await RunLineProbeAsync();
     }
     private async Task CheckSiteAsync(SiteCheckItem check)
@@ -914,17 +1140,26 @@ public partial class MainWin : Window
         text.AppendLine($"MistSail {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion} · {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}");
         text.AppendLine($"admin={MainConst.IsAdmin} nginx={MainPres.IsNginxRunning} relay={MainPres.IsRelayRunning} ports={NginxHttpPort}/{NginxHttpsPort} connectedAt={MainPres.ConnectedAt:HH:mm:ss}");
         text.AppendLine($"relay-status: {MainPres.RelayStatus}");
+        text.AppendLine($"desync: {(Desync is not null ? $"running armed={Desync.Armed?.Name ?? "-"}" : $"not running ({DesyncError ?? "relay stopped"})")}");
+        text.AppendLine($"video-proxy: {(VideoProxy is not null && VideoPac is not null ? $"running proxy=127.0.0.1:{VideoProxy.Port} pac={VideoPac.PacUrl}" : "not running")}");
+        text.AppendLine($"video-hosts: {(RelayOptions is not null && RelayOptions.DynamicProxyEnabled ? string.Join(",", RelayOptions.DynamicProxyHosts) : "disabled")}");
+        text.AppendLine($"system-pac: {SystemProxy.CurrentAutoConfigUrl ?? "-"}");
         foreach (SiteCheckItem check in MainPres.SiteChecks)
             text.AppendLine($"{check.Name}: {check.State} · {check.Detail}");
         if (Relay is not null)
+        {
+            text.AppendLine($"relay-strategy: {Relay.CurrentStrategy.Name}{(Relay.IsPinnedByConfig ? " (pinned by direct-config.json)" : string.Empty)}");
             foreach (KeyValuePair<string, string> pair in Relay.LastResultByHost.OrderBy(pair => pair.Key))
                 text.AppendLine($"relay {pair.Key}: {pair.Value}");
-        if (LineProbeOutcomes.Count > 0)
+        }
+        if (LineReport is not null)
         {
             text.AppendLine("--- line probe ---");
-            foreach (LineProbe.Outcome outcome in LineProbeOutcomes)
-                text.AppendLine($"{outcome.Step.Name} [{outcome.Step.Ip} sni={outcome.Step.Sni} frag={outcome.Step.Fragment}] -> {outcome.Result} {outcome.Milliseconds}ms");
-            text.AppendLine($"verdict: {LineProbe.Verdict(LineProbeOutcomes)}");
+            foreach (LineProbe.Outcome outcome in LineReport.Outcomes)
+                text.AppendLine($"{outcome.Step.Name} [{outcome.Step.Ip} sni={outcome.Step.Sni} strategy={outcome.Step.Strategy?.Name ?? "-"}] -> {outcome.Text}{(outcome.Injected ? " (injected)" : string.Empty)} {outcome.Milliseconds}ms connect={outcome.ConnectMs}ms");
+            text.AppendLine($"reachable: {string.Join(",", LineReport.Reachable.Select(ip => ip.ToString()))} dead: {string.Join(",", LineReport.Dead.Select(ip => ip.ToString()))}");
+            text.AppendLine($"winner: {LineReport.Winner?.Name ?? "-"} fastly: {LineReport.FastlyWinner?.Name ?? "-"} desync: {LineReport.DesyncWinner?.Name ?? "-"}");
+            text.AppendLine($"verdict: {LineReport.Text}");
         }
         text.AppendLine($"--- {SniRelay.LogFile} (tail) ---");
         try
@@ -960,14 +1195,39 @@ public partial class MainWin : Window
         MainPres.IsMihomoExist = File.Exists(Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase!, Path.GetFileName(MainConst.MihomoPath)));
         MainPres.IsMihomoRunning = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(MainConst.MihomoPath)).Length != 0;
 
-        // Nginx stopped elsewhere (killed, crashed): its exit handler removed the hosts block, so the relay is idle.
-        if (!MainPres.IsNginxRunning && !MainPres.IsNginxIniting && Relay is not null)
+        // 启动过程中 hosts 已写好但 nginx 还没起来，这段时间不能判定成"nginx 没了"。
+        if (MainPres.IsNginxRunning || MainPres.IsNginxIniting || IsNginxLaunchingSemaphore.CurrentCount == 0)
+        {
+            NginxMissingTicks = 0;
+
+            return;
+        }
+
+        // nginx 已经不在（被任务管理器杀掉、崩溃、或上次会话被强杀）。旧版本在这里假设"退出回调
+        // 已经清掉了 hosts 区块"，于是只停了中继：hosts 继续把域名指向没人监听的回环端口，
+        // 连同代理一起失效。现在真的去清，并连续多次确认，避免和启动/停止流程互相抢。
+        if (++NginxMissingTicks < 10 || WindowClosing || Dispatcher.HasShutdownStarted)
+            return;
+
+        NginxMissingTicks = 0;
+
+        if (Relay is not null)
         {
             StopRelay();
             MainPres.ConnectedAt = null;
             foreach (SiteCheckItem check in MainPres.SiteChecks)
                 check.Reset();
         }
+
+        if (VideoProxy is not null || VideoPac is not null || SystemProxy.HasResidue())
+            StopVideoProxy();
+
+        // hosts 写入需要管理员权限；PAC 恢复只写当前用户注册表，普通权限也应执行。没有管理员时
+        // 不要每秒重试 hosts 清理刷日志，交给启动提示。
+        if (MainConst.IsAdmin && (NginxCleaner.HasHostsResidue() || SystemProxy.HasResidue()))
+            _ = NginxCleaner.Clean();
+        else if (!MainConst.IsAdmin && SystemProxy.HasResidue())
+            SystemProxy.Restore();
     }
     private void CealHostWatcher_Changed(object sender, FileSystemEventArgs e)
     {

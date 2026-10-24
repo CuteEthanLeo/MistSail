@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace MistSail.Direct;
 
-// Splits only the first ClientHello, at the SNI name. Application data is untouched.
-// tls-record mode preserves the handshake bytes but changes their record boundaries.
-// tcp mode preserves every byte, changing only write boundaries and pacing.
-internal sealed class FragmentingStream(Stream inner, DirectOptions options, bool fragment, bool leaveOpen = false) : Stream
+// Re-frames only the first ClientHello according to a HelloStrategy. Application data is
+// untouched. The strategy is captured at construction, so a strategy change elsewhere can never
+// mix layouts inside one handshake.
+internal sealed class FragmentingStream(Stream inner, HelloStrategy? strategy, bool leaveOpen = false) : Stream
 {
-    private MemoryStream? pending = fragment ? new MemoryStream() : null;
+    private MemoryStream? pending = strategy is { Fragments: true } ? new MemoryStream() : null;
     public override bool CanRead => inner.CanRead;
     public override bool CanSeek => false;
     public override bool CanWrite => inner.CanWrite;
@@ -59,33 +59,26 @@ internal sealed class FragmentingStream(Stream inner, DirectOptions options, boo
         pending.Dispose();
         pending = null;
 
-        if (!TryFindServerName(data.AsSpan(0, recordLength), out int nameOffset, out int nameLength))
-            await inner.WriteAsync(data.AsMemory(0, recordLength), cancellationToken);
-        else
-        {
-            int start = options.FragmentMode == "tcp" ? 0 : 5;
-            // The host name itself must never sit whole inside one record: short names such as
-            // "x.com" are split in the middle, so no single record carries a matchable SNI.
-            int nameChunk = Math.Min(options.FragmentBytes, Math.Max(1, (nameLength + 1) / 2));
-            int nameEnd = nameOffset + nameLength;
-            while (start < recordLength)
-            {
-                int end = start < nameOffset ? nameOffset :
-                    start < nameEnd ? Math.Min(start + nameChunk, nameEnd) : recordLength;
-                if (options.FragmentMode == "tls-record")
-                {
-                    byte[] header = [data[0], data[1], data[2], 0, 0];
-                    BinaryPrimitives.WriteUInt16BigEndian(header.AsSpan(3), checked((ushort)(end - start)));
-                    await inner.WriteAsync(header, cancellationToken);
-                }
-                await inner.WriteAsync(data.AsMemory(start, end - start), cancellationToken);
-                start = end;
-                if (start < recordLength && options.FragmentDelayMs > 0)
-                    await Task.Delay(options.FragmentDelayMs, cancellationToken);
-            }
-        }
+        await WriteShapedAsync(inner, data.AsMemory(0, recordLength), strategy!, cancellationToken);
         if (data.Length > recordLength)
             await inner.WriteAsync(data.AsMemory(recordLength), cancellationToken);
+    }
+
+    // Writes one ClientHello record using the strategy's write sequence. Falls back to a single
+    // write when the record carries no SNI (nothing to hide, nothing to split around).
+    internal static async ValueTask WriteShapedAsync(Stream target, ReadOnlyMemory<byte> record, HelloStrategy strategy, CancellationToken cancellationToken)
+    {
+        if (!strategy.Fragments || !TryFindServerName(record.Span, out int nameOffset, out int nameLength))
+        {
+            await target.WriteAsync(record, cancellationToken);
+            return;
+        }
+        foreach (HelloWrite write in HelloShaper.Shape(record.Span, nameOffset, nameLength, strategy))
+        {
+            await target.WriteAsync(write.Bytes, cancellationToken);
+            if (write.DelayAfterMs > 0)
+                await Task.Delay(write.DelayAfterMs, cancellationToken);
+        }
     }
 
     internal async ValueTask FlushPendingAsync(CancellationToken cancellationToken)

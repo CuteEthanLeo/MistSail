@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -388,6 +388,9 @@
     <value>The X relay could not listen on {0}: {1}
 Other sites still work; X will not.</value>
   </data>
+  <data name="_HostsResidueNeedsAdminMsg" xml:space="preserve">
+    <value>The last session did not exit cleanly, so MistSail's hosts entries are still in place. Every affected domain now points at a local port with nothing listening, which is why sites stay unreachable even with a proxy on. Please reopen MistSail as administrator so it can restore hosts automatically.</value>
+  </data>
   <data name="DirectStartButtonContent" xml:space="preserve">
     <value>Browser direct (experimental)</value>
   </data>
@@ -428,7 +431,7 @@ Other sites still work; X will not.</value>
     <value>Line diagnosis</value>
   </data>
   <data name="LineProbeRunning" xml:space="preserve">
-    <value>Line diagnosis running (about 1 minute): control handshakes against the X edge IPs…</value>
+    <value>Line diagnosis running (1–2 minutes): finding edge IPs that still answer, then trying each ClientHello layout…</value>
   </data>
   <data name="LineProbeVerdict" xml:space="preserve">
     <value>Diagnosis: {0}</value>

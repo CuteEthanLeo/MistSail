@@ -1,9 +1,11 @@
-﻿using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf;
+using MistSail.Direct;
 using MistSail.Preses;
 using MistSail.Props;
 using MistSail.Utils;
 using MistSail.Wins;
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -53,11 +55,35 @@ public partial class App : Application
         new SettingsPres().AccentForegroundColor = newAccentForegroundColor;
         #endregion Foreground Color
 
+        // 注销/关机时 WPF 的关闭流程可能走不完（来不及 await），这里做一次同步兜底，
+        // 否则重启后 hosts 仍指着没人监听的回环端口，用户会以为"代理坏了"。
+        SessionEnding += (_, _) => NginxCleaner.CleanSync();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => NginxCleaner.CleanSync();
+
+        // Raw background threads (notably the WinDivert receive loop) cannot be caught by the WPF
+        // dispatcher handler. Without this, one malformed packet terminates the process silently and
+        // leaves nginx/hosts/PAC behind. Log the real reason and make one best-effort cleanup pass.
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            string detail = args.ExceptionObject?.ToString() ?? "(unknown)";
+            DirectLog.Write("crash.log", $"未处理异常（IsTerminating={args.IsTerminating}）：{detail}");
+            try { NginxCleaner.CleanSync(); }
+            catch (Exception ex) { NginxCleaner.LogFailure("崩溃清理失败", ex); }
+        };
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            DirectLog.Write("crash.log", $"未观察任务异常：{args.Exception}");
+            args.SetObserved();
+        };
+
         new MainWin().Show();
     }
 
     private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
+        // 退出流程里的异常以前会在这里被吞掉且不留痕迹，是"窗口关不掉又没报错"的帮凶。
+        DirectLog.Write("crash.log", $"UI 未处理异常：{e.Exception}");
+        NginxCleaner.LogFailure("未处理异常", e.Exception);
         MessageBox.Show($"Error: {e.Exception.Message}");
         e.Handled = true;
     }

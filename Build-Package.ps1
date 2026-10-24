@@ -10,7 +10,7 @@ $taskBuildId = Get-Date -Format 'yyyyMMdd-HHmmss'
 $taskStage = Join-Path $taskArtifacts "stage\$taskBuildId"
 $taskOutput = Join-Path $taskStage 'MistSail-win-x64'
 $taskUpstream = Join-Path $taskRoot 'vendor\upstream-1.1.4'
-$taskArchive = Join-Path $taskArtifacts "MistSail-v1.1.4.4-win-x64-$taskBuildId.zip"
+$taskArchive = Join-Path $taskArtifacts "MistSail-v1.1.4.7-win-x64-$taskBuildId.zip"
 
 if (!(Test-Path -LiteralPath (Join-Path $taskUpstream 'Cealing-Nginx.exe'))) {
     throw '缺少 vendor/upstream-1.1.4，请先解压官方 1.1.4 免安装发行包到该目录。'
@@ -22,6 +22,14 @@ foreach ($taskCore in @('Ona-Core.dll', 'Sheas-Core.dll')) {
 }
 if (!(Test-Path -LiteralPath (Join-Path $taskRoot 'vendor\Cealing-Host-U.json'))) {
     throw '缺少 vendor/Cealing-Host-U.json 的上游规则快照。'
+}
+if (!(Test-Path -LiteralPath (Join-Path $taskRoot 'Cealing-Host-L.json'))) {
+    throw '缺少 Cealing-Host-L.json 的本地规则（含 google.com.hk）。'
+}
+foreach ($taskDriver in @('WinDivert.dll', 'WinDivert64.sys')) {
+    if (!(Test-Path -LiteralPath (Join-Path $taskRoot "vendor\windivert\$taskDriver"))) {
+        throw "缺少 vendor/windivert/$taskDriver（WinDivert 2.2.2 x64，内核级 desync 需要）。"
+    }
 }
 if (Test-Path -LiteralPath (Join-Path $taskRoot 'Cealing-Host-X.json')) {
     throw 'Cealing-Host-X.json 已废弃（X 改由分片中继处理），请删除后再打包。'
@@ -51,7 +59,7 @@ foreach ($taskDocument in @('README.md', 'README_DIRECT.md', 'README_X_RELAY.md'
     Copy-Item -LiteralPath (Join-Path $taskRoot $taskDocument) -Destination $taskOutput
 }
 Copy-Item -LiteralPath (Join-Path $taskRoot 'vendor\Cealing-Host-U.json') -Destination $taskOutput
-Set-Content -LiteralPath (Join-Path $taskOutput 'Cealing-Host-L.json') -Value '[]' -Encoding utf8
+Copy-Item -LiteralPath (Join-Path $taskRoot 'Cealing-Host-L.json') -Destination (Join-Path $taskOutput 'Cealing-Host-L.json')
 Set-Content -LiteralPath (Join-Path $taskOutput 'nginx.conf') -Value '' -NoNewline -Encoding utf8
 Set-Content -LiteralPath (Join-Path $taskOutput 'config.yaml') -Value '' -NoNewline -Encoding utf8
 Remove-Item -LiteralPath (Join-Path $taskOutput 'MistSail.pdb') -ErrorAction SilentlyContinue
@@ -59,19 +67,19 @@ Remove-Item -LiteralPath (Join-Path $taskOutput 'RelayCheck.exe') -ErrorAction S
 Remove-Item -LiteralPath (Join-Path $taskOutput 'RelayCheck.dll') -ErrorAction SilentlyContinue
 
 $taskQuickStart = @'
-雾帆 MistSail 1.1.4.4 —— 一键连接 + X 分片直连 + 线路诊断。X 连不上时会自动做对照握手，把“诊断”那行和复制的诊断信息发回来。
+雾帆 MistSail 1.1.4.7 —— 一键连接 + X 分片直连 + 自动寻路。修复 WinDivert 接收线程在长时间运行后被单个异常包带崩的闪退；X 连不上时会自动刷新候选 IP、找仍有响应的边缘 IP 并逐个试 ClientHello 发法（1–2 分钟），找到就自动切换并重测。
 
 1. 将压缩包完整解压到一个新目录，不要覆盖正在运行的旧版。
 2. 在旧版里先停止“全局伪造 / 全局净化”，再退出旧程序。
-3. 关闭 Clash Verge 等梯子（包括 TUN 和系统代理）。
+3. 关闭 Clash Verge 等梯子（包括 TUN 和系统代理）；TUN 开着时诊断会直接报“本轮无效”。
 4. 右键 MistSail.exe，以管理员身份运行；或直接打开后点“以管理员身份重新打开”。
 5. 点击中间的大圆按钮。变绿后下方“连通性”卡片会自动检测 YouTube、X、GitHub。
 6. 新开标签访问 https://x.com，检查页面、登录、图片和视频。
 7. 不行就点“复制诊断信息”，把内容和 logs/relay.log、logs/error.log、截图一起发回来。
 8. 用完点一下大按钮断开；直接关窗口也会先断开再退出。
 
-YouTube 等沿用上一版已能播放的规则（Cealing-Host-U.json 未改动）。
-X 的域名改走 127.0.0.2 上的分片中继，不再经过 nginx；原理、配置和日志含义见 README_X_RELAY.md。
+YouTube 页面仍用规则表；视频动态域名（*.googlevideo.com 等）在连接期间由本机 PAC 交给 127.0.0.1 的回环转发器，经 DoH 解析与握手分片后直连，断开时自动恢复系统代理设置。
+X 的域名改走 127.0.0.2 上的分片中继，不再经过 nginx；google.com.hk 由 Cealing-Host-L.json 本地规则接管；原理、配置和日志含义见 README_X_RELAY.md。
 旧版的全部按钮都在底部“更多功能”里。
 '@
 Set-Content -LiteralPath (Join-Path $taskOutput '先读我.txt') -Value $taskQuickStart -Encoding utf8
